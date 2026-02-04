@@ -1,122 +1,165 @@
-# Basic Website with Login and MFA
+# MFA vs Passkey Authentication Comparison
 
-A simple Flask web application with login functionality and Multi-Factor Authentication (MFA) using TOTP (Time-based One-Time Password).
+A Flask web application comparing two authentication methods:
+- **MFA (Multi-Factor Authentication)**: Traditional password + TOTP codes
+- **Passkey**: Modern passwordless authentication with biometrics
 
 ## Features
 
-- ✅ User authentication with username/password
-- 🔐 Multi-Factor Authentication (MFA) using TOTP
-- 📱 QR code generation for easy authenticator app setup
-- 🛡️ Session management and security
-- 🎨 Modern, responsive UI design
+### 📱 MFA Path
+- Username + Password
+- Authenticator app setup (Google Authenticator, Authy, etc.)
+- Time-based codes (TOTP)
+- Works on any device
+
+### 🔑 Passkey Path
+- **Passwordless** - No password needed!
+- **Biometric** - Touch ID, Face ID, Windows Hello
+- **Faster** - Login in ~2 seconds
+- **More Secure** - Phishing-resistant, keys never leave device
 
 ## Requirements
 
 - Python 3.7+
-- Flask
-- pyotp
-- qrcode
+- Modern browser supporting WebAuthn (Chrome, Safari, Firefox, Edge)
+- macOS with Touch ID, Windows Hello, or Android/iOS device
 
 ## Installation
 
-1. Install the required dependencies:
 ```bash
+# Clone/download the repo
+cd passkey-instead-of-mfa
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## Running the Application
+## Running the App
 
-1. Start the Flask server:
 ```bash
 python app.py
 ```
 
-2. Open your web browser and navigate to:
-```
-http://localhost:5000
-```
+The app will start on **https://localhost:5000** (HTTPS required for passkeys)
 
-## How to Use
+⚠️ Your browser will warn about the self-signed certificate. Click "Advanced" → "Proceed" (safe for local development)
 
-### First Time Login
+## Usage
 
-1. **Login**: Use the demo credentials
-   - Username: `admin`
-   - Password: `password123`
+### Try MFA Authentication
 
-2. **Setup MFA**: 
-   - Download an authenticator app (Google Authenticator, Authy, Microsoft Authenticator)
-   - Scan the QR code displayed on screen
-   - Alternatively, manually enter the secret key into your authenticator app
+1. Go to https://localhost:5000
+2. Click "Login with MFA"
+3. Enter credentials (demo: `admin` / `password123`)
+4. Scan QR code with authenticator app
+5. Enter the 6-digit code
 
-3. **Verify MFA**:
-   - Enter the 6-digit code from your authenticator app
-   - Click "Verify" to complete login
+### Try Passkey Authentication
 
-### Subsequent Logins
+1. Go to https://localhost:5000
+2. Click "Login with Passkey"
+3. Click "Register a new passkey"
+4. Enter credentials (demo: `admin` / `password123`)
+5. Use your fingerprint/Face ID when prompted
+6. Done! Next login takes ~2 seconds
 
-1. Enter your username and password
-2. Enter the current 6-digit code from your authenticator app
-3. Access the secure dashboard
+## Comparison
 
-## Security Notes
-
-⚠️ **This is a demo application. For production use:**
-
-- Replace the in-memory user database with a proper database
-- Use bcrypt or similar to hash passwords (never store plaintext!)
-- Use environment variables for the secret key
-- Implement HTTPS/TLS
-- Add rate limiting to prevent brute force attacks
-- Add password complexity requirements
-- Implement account lockout after failed attempts
-- Add CSRF protection
-- Store MFA secrets securely (encrypted in database)
-
-## File Structure
-
-```
-.
-├── app.py                 # Flask backend application
-├── requirements.txt       # Python dependencies
-├── templates/            # HTML templates
-│   ├── login.html        # Login page
-│   ├── setup_mfa.html    # MFA setup page
-│   ├── verify_mfa.html   # MFA verification page
-│   └── dashboard.html    # Protected dashboard page
-└── README.md             # This file
-```
+| Feature | MFA | Passkey |
+|---------|-----|---------|
+| Passwordless | ❌ | ✅ |
+| Biometric | ❌ | ✅ |
+| Phishing-Resistant | Partial | ✅ |
+| Setup Time | ~30 seconds | ~10 seconds |
+| Login Speed | ~10 seconds | ~2 seconds |
+| App Required | ✅ (Authenticator) | ❌ |
 
 ## How It Works
 
-1. **Authentication**: Users provide credentials which are verified against the user database
-2. **MFA Setup**: A unique secret is generated and encoded as a QR code for the user to scan
-3. **TOTP Verification**: The app generates time-based codes that change every 30 seconds
-4. **Session Management**: Successfully authenticated users receive a secure session cookie
+### MFA (TOTP)
+- Uses **PyOTP** to generate time-based codes
+- Secret stored on server, synced with authenticator app
+- New 6-digit code every 30 seconds
 
-## Customization
+### Passkey (WebAuthn)
+- Uses **Web Authentication API** (WebAuthn)
+- Private key stored in device's **Secure Enclave** (never transmitted)
+- Public key stored on server
+- Biometric verification proves you own the device
 
-### Adding New Users
+## Project Structure
 
-Edit the `users` dictionary in `app.py`:
-
-```python
-users = {
-    "newuser": {
-        "password": "securepassword",  # Hash this in production!
-        "mfa_secret": None
-    }
-}
+```
+passkey-instead-of-mfa/
+├── app.py                      # Flask backend
+├── requirements.txt            # Dependencies
+├── README.md                   # This file
+└── templates/
+    ├── index.html              # Landing page
+    ├── mfa_login.html          # MFA login
+    ├── setup_mfa.html          # MFA setup
+    ├── verify_mfa.html         # MFA verification
+    ├── passkey_login.html      # Passkey login
+    ├── passkey_register.html   # Passkey registration
+    └── dashboard.html          # Protected page
 ```
 
-### Changing the Port
+## Demo Credentials
 
-Modify the last line in `app.py`:
+- Username: `admin`
+- Password: `password123`
 
-```python
-app.run(debug=True, port=8080)  # Change to your preferred port
-```
+## Security Notes
+
+⚠️ **This is a demonstration app!**
+
+For production use:
+- Use a real database (not in-memory)
+- Hash passwords with bcrypt
+- Store MFA secrets encrypted
+- Use proper certificate (not self-signed)
+- Implement rate limiting
+- Add CSRF protection
+- Verify passkey assertions properly
+- Add account recovery flows
+
+## Why Passkeys Are Better
+
+1. **No Passwords** - Nothing to remember, leak, or phish
+2. **Phishing-Proof** - Keys are domain-bound
+3. **Faster** - 2 seconds vs 10+ seconds
+4. **User-Friendly** - Same biometric you use to unlock device
+5. **More Secure** - Private keys never leave device
+
+## Browser Support
+
+Passkeys work in:
+- ✅ Chrome 67+
+- ✅ Safari 13+
+- ✅ Firefox 60+
+- ✅ Edge 18+
+
+## Troubleshooting
+
+**"Passkey not working"**
+- Ensure you're using HTTPS (even localhost must be https://)
+- Check browser supports WebAuthn
+- Ensure biometrics are set up on your device
+
+**"Certificate warning"**
+- Normal for self-signed certs
+- Click "Advanced" → "Proceed to localhost"
+
+**"Touch ID not prompted"**
+- Make sure Touch ID is enabled in System Preferences
+- Try Chrome/Safari (best support on macOS)
+
+## Learn More
+
+- [WebAuthn Guide](https://webauthn.guide/)
+- [FIDO Alliance](https://fidoalliance.org/)
+- [Passkeys.dev](https://passkeys.dev/)
 
 ## License
 
-Free to use and modify for any purpose.
+Free to use for learning and demonstration purposes.
