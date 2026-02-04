@@ -7,18 +7,71 @@ from functools import wraps
 import secrets
 import os
 import json
+from cryptography.fernet import Fernet
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
-# Simple in-memory user database
-users = {
-    "admin": {
-        "password": "password123",
-        "mfa_secret": None,
-        "passkey_credentials": []  # Store passkey credentials
-    }
-}
+# File-based user storage
+USERS_FILE = 'users.json'
+KEY_FILE = 'encryption.key'
+
+# ============================================
+# Encryption Functions
+# ============================================
+
+def get_encryption_key():
+    """Get or create encryption key"""
+    if os.path.exists(KEY_FILE):
+        with open(KEY_FILE, 'rb') as f:
+            return f.read()
+    else:
+        key = Fernet.generate_key()
+        with open(KEY_FILE, 'wb') as f:
+            f.write(key)
+        return key
+
+def encrypt_data(data):
+    """Encrypt data using Fernet"""
+    key = get_encryption_key()
+    f = Fernet(key)
+    return f.encrypt(data.encode()).decode()
+
+def decrypt_data(encrypted_data):
+    """Decrypt data using Fernet"""
+    key = get_encryption_key()
+    f = Fernet(key)
+    return f.decrypt(encrypted_data.encode()).decode()
+
+def load_users():
+    """Load and decrypt users from JSON file"""
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'r') as f:
+            encrypted_users = json.load(f)
+            users = {}
+            for username, user_data in encrypted_users.items():
+                users[username] = {
+                    'password': decrypt_data(user_data['password']),
+                    'mfa_secret': decrypt_data(user_data['mfa_secret']) if user_data['mfa_secret'] else None,
+                    'passkey_credentials': user_data['passkey_credentials']
+                }
+            return users
+    return {}
+
+def save_users(users):
+    """Encrypt and save users to JSON file"""
+    encrypted_users = {}
+    for username, user_data in users.items():
+        encrypted_users[username] = {
+            'password': encrypt_data(user_data['password']),
+            'mfa_secret': encrypt_data(user_data['mfa_secret']) if user_data['mfa_secret'] else None,
+            'passkey_credentials': user_data['passkey_credentials']
+        }
+    with open(USERS_FILE, 'w') as f:
+        json.dump(encrypted_users, f, indent=4)
+
+# Load users at startup
+users = load_users()
 
 def login_required(f):
     @wraps(f)
@@ -40,6 +93,53 @@ def index():
     return render_template('index.html')
 
 # ============================================
+# User Registration
+# ============================================
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration route"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Validation
+        if not username or not password:
+            return render_template('register.html', error='Username and password are required')
+
+        if len(password) < 8:
+            return render_template('register.html', error='Password must be at least 8 characters')
+
+        if password != confirm_password:
+            return render_template('register.html', error='Passwords do not match')
+
+        if username in users:
+            return render_template('register.html', error='Username already exists')
+
+        # Create new user
+        users[username] = {
+            'password': password,
+            'mfa_secret': None,
+            'passkey_credentials': []
+        }
+        save_users(users)
+
+        # Auto-login after registration
+        session['username'] = username
+        session['registered'] = True
+        return redirect(url_for('setup_choice'))
+
+    return render_template('register.html')
+
+@app.route('/setup-choice')
+def setup_choice():
+    """Choose authentication method after registration"""
+    if 'username' not in session:
+        return redirect(url_for('index'))
+    return render_template('setup_choice.html', username=session['username'])
+
+# ============================================
 # MFA Authentication Routes
 # ============================================
 
@@ -55,11 +155,9 @@ def mfa_login():
             session['mfa_verified'] = False
             session['passkey_verified'] = False
 
-            # If user has MFA setup, redirect to MFA verification
             if users[username]['mfa_secret']:
                 return redirect(url_for('verify_mfa'))
             else:
-                # If no MFA setup, redirect to setup
                 return redirect(url_for('setup_mfa'))
         else:
             return render_template('mfa_login.html', error='Invalid credentials')
@@ -73,11 +171,10 @@ def setup_mfa():
 
     username = session['username']
 
-    # Generate MFA secret
     secret = pyotp.random_base32()
     users[username]['mfa_secret'] = secret
+    save_users(users)
 
-    # Generate QR code
     totp = pyotp.TOTP(secret)
     provisioning_uri = totp.provisioning_uri(username, issuer_name="MFA Demo")
 
@@ -136,14 +233,13 @@ def passkey_register():
 
     return render_template('passkey_register.html')
 
-# API endpoints for passkey
 @app.route('/api/passkey/register-options', methods=['POST'])
 def passkey_register_options():
     username = session.get('username')
     if not username:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    # Generate challenge
+    hostname = request.host.split(':')[0]
     challenge = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
     session['passkey_challenge'] = challenge
 
@@ -151,7 +247,7 @@ def passkey_register_options():
         'challenge': challenge,
         'rp': {
             'name': 'Passkey Demo',
-            'id': 'localhost'
+            'id': hostname
         },
         'user': {
             'id': base64.urlsafe_b64encode(username.encode()).decode('utf-8').rstrip('='),
@@ -159,8 +255,8 @@ def passkey_register_options():
             'displayName': username
         },
         'pubKeyCredParams': [
-            {'type': 'public-key', 'alg': -7},   # ES256
-            {'type': 'public-key', 'alg': -257}  # RS256
+            {'type': 'public-key', 'alg': -7},
+            {'type': 'public-key', 'alg': -257}
         ],
         'timeout': 60000,
         'attestation': 'none',
@@ -181,13 +277,12 @@ def passkey_register_verify():
 
     credential = request.json
 
-    # In production, you would verify the credential properly
-    # For demo purposes, we'll store it
     users[username]['passkey_credentials'].append({
         'id': credential.get('id'),
         'rawId': credential.get('rawId'),
         'type': credential.get('type')
     })
+    save_users(users)
 
     session['passkey_verified'] = True
 
@@ -204,12 +299,11 @@ def passkey_login_options():
     if not users[username]['passkey_credentials']:
         return jsonify({'error': 'No passkey registered'}), 404
 
-    # Generate challenge
+    hostname = request.host.split(':')[0]
     challenge = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
     session['passkey_challenge'] = challenge
     session['username'] = username
 
-    # Get user's credential IDs
     allowed_credentials = [
         {
             'type': 'public-key',
@@ -221,7 +315,7 @@ def passkey_login_options():
     options = {
         'challenge': challenge,
         'timeout': 60000,
-        'rpId': 'localhost',
+        'rpId': hostname,
         'allowCredentials': allowed_credentials,
         'userVerification': 'required'
     }
@@ -234,8 +328,6 @@ def passkey_login_verify():
     if not username:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    # In production, verify the assertion properly
-    # For demo, we'll accept it
     session['auth_method'] = 'passkey'
     session['passkey_verified'] = True
     session['mfa_verified'] = False
