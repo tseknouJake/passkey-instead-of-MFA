@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup MFA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .instructions {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .qr-code {
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        .secret {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .secret-code {
+            font-family: monospace;
+            font-size: 16px;
+            color: #667eea;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Setup Multi-Factor Authentication</h1>
+
+        <div class="instructions">
+            <strong>Step 1:</strong> Download an authenticator app (Google Authenticator, Authy, or Microsoft Authenticator)<br>
+            <strong>Step 2:</strong> Scan the QR code below or enter the secret key manually<br>
+            <strong>Step 3:</strong> Click "Continue" to verify your setup
+        </div>
+
+        <div class="qr-container">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="MFA QR Code" class="qr-code">
+        </div>
+
+        <div class="secret">
+            <div style="margin-bottom: 10px; color: #666;">Manual Entry Key:</div>
+            <div class="secret-code">{{ secret }}</div>
+        </div>
+
+        <form action="{{ url_for('verify_mfa') }}" method="GET">
+            <button type="submit">Continue to Verification</button>
+        </form>
+    </div>
+</body>
+</html>
