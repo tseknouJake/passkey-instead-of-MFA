@@ -144,16 +144,16 @@
             <h2>✅ Login Successful!</h2>
             {% if auth_method == 'mfa' %}
             <p>You have successfully authenticated with <strong>Multi-Factor Authentication (MFA)</strong></p>
-            <div class="auth-badge badge-mfa">📱 MFA Enabled</div>
+            <!-- <div class="auth-badge badge-mfa">📱 MFA Enabled</div> -->
             {% elif auth_method == 'passkey' %}
             <p>You have successfully authenticated with <strong>Passkey (Passwordless)</strong></p>
-            <div class="auth-badge badge-passkey">🔑 Passkey Enabled</div>
+            <!-- <div class="auth-badge badge-passkey">🔑 Passkey Enabled</div> -->
             {% else %}
             <p>You have successfully authenticated</p>
             {% endif %}
         </div>
 
-        <div class="features">
+        <!-- <div class="features">
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <h3>Authentication Method</h3>
@@ -174,7 +174,7 @@
                 <p>{{ 'High - Two-factor authentication' if auth_method == 'mfa' else 'Very High - Phishing-resistant'
                     if auth_method == 'passkey' else 'Standard' }}</p>
             </div>
-        </div>
+        </div> -->
     </div>
 </body>
 
