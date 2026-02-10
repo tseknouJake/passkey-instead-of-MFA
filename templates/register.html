@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MFA Login</title>
+    <title>Register</title>
     <style>
         * {
             margin: 0;
@@ -14,20 +13,21 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
         }
 
         .back-btn {
@@ -48,14 +48,11 @@
             margin-bottom: 10px;
         }
 
-        .method-badge {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        .subtitle {
             text-align: center;
-            padding: 8px;
-            border-radius: 5px;
+            color: #666;
             margin-bottom: 30px;
-            font-weight: 600;
-            color: #333;
+            font-size: 14px;
         }
 
         .form-group {
@@ -80,14 +77,20 @@
 
         input:focus {
             outline: none;
-            border-color: #fcb69f;
+            border-color: #667eea;
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
             border-radius: 5px;
             font-size: 16px;
@@ -109,45 +112,57 @@
             text-align: center;
         }
 
-        .info {
+        .login-link {
             text-align: center;
             margin-top: 20px;
             color: #666;
             font-size: 14px;
         }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <a href="{{ url_for('index') }}" class="back-btn">← Back to options</a>
-        <h1>MFA Login</h1>
-        <div class="method-badge">Multi-Factor Authentication</div>
+        <a href="{{ url_for('index') }}" class="back-btn">← Back to home</a>
+        <h1>✨ Create Account</h1>
+        <p class="subtitle">Register to get started with secure authentication</p>
+
         {% if error %}
         <div class="error">{{ error }}</div>
         {% endif %}
+
         <form method="POST">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required autofocus>
             </div>
+
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required minlength="8">
+                <div class="password-hint">Minimum 8 characters</div>
             </div>
-            <button type="submit">Continue to MFA</button>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
+            </div>
+
+            <button type="submit">Create Account</button>
         </form>
-        <div class="info">
-            <ul>
-                <div>Demo: username = "admin", password = "password123"</div>
-                <div>or</div>
-                <div>username: "jake", password = "jake1234"</div>
-            </ul>
 
-
-
+        <div class="login-link">
+            Already have an account? <a href="{{ url_for('index') }}">Login</a>
         </div>
     </div>
 </body>
-
 </html>

@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Passkey Login</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
@@ -19,7 +14,6 @@
             align-items: center;
             min-height: 100vh;
         }
-
         .container {
             background: white;
             padding: 40px;
@@ -28,7 +22,6 @@
             width: 100%;
             max-width: 450px;
         }
-
         .back-btn {
             color: #667eea;
             text-decoration: none;
@@ -36,17 +29,7 @@
             margin-bottom: 20px;
             display: inline-block;
         }
-
-        .back-btn:hover {
-            text-decoration: underline;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
+        h1 { text-align: center; color: #333; margin-bottom: 10px; }
         .method-badge {
             background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
             text-align: center;
@@ -56,32 +39,16 @@
             font-weight: 600;
             color: #333;
         }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 500;
-        }
-
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: 500; }
         input {
             width: 100%;
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 5px;
             font-size: 14px;
-            transition: border-color 0.3s;
         }
-
-        input:focus {
-            outline: none;
-            border-color: #a1c4fd;
-        }
-
+        input:focus { outline: none; border-color: #a1c4fd; }
         button {
             width: 100%;
             padding: 12px;
@@ -92,89 +59,37 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .success {
-            background: #efe;
-            color: #282;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error { background: #fee; color: #c33; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; }
+        .success { background: #efe; color: #282; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; }
         .info-box {
             background: #f0f7ff;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
         }
-
-        .info-box h3 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .info-box p {
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 10px;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 30px 0;
-            color: #999;
-        }
-
-        .register-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .register-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .register-link a:hover {
-            text-decoration: underline;
-        }
+        .info-box h3 { color: #333; margin-bottom: 10px; font-size: 18px; }
+        .info-box p { color: #555; line-height: 1.6; margin-bottom: 10px; }
+        .divider { text-align: center; margin: 30px 0; color: #999; }
+        .register-link { text-align: center; margin-top: 20px; }
+        .register-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .register-link a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="{{ url_for('index') }}" class="back-btn">← Back to options</a>
-        <h1>🔑 Passkey Login</h1>
+        <h1>Passkey Login</h1>
         <div class="method-badge">Passwordless Authentication</div>
 
         <div id="message"></div>
 
         <div class="info-box">
             <h3>How it works:</h3>
-            <p>🔒 Enter your username and use your device's biometric (fingerprint, Face ID, etc.) to login</p>
-            <p>⚡ No password needed!</p>
+            <p>Enter your username and use your device's biometric (fingerprint, Face ID, etc.) to login</p>
+            <p>No password needed!</p>
         </div>
 
         <form id="passkeyLoginForm">
@@ -206,6 +121,9 @@
             try {
                 loginBtn.disabled = true;
                 loginBtn.textContent = '🔄 Authenticating...';
+                messageDiv.innerHTML = '';
+
+                console.log('Requesting login options for:', username);
 
                 // Get authentication options from server
                 const optionsResponse = await fetch('/api/passkey/login-options', {
@@ -214,22 +132,36 @@
                     body: JSON.stringify({ username })
                 });
 
+                console.log('Options response status:', optionsResponse.status);
+
                 if (!optionsResponse.ok) {
                     const error = await optionsResponse.json();
+                    console.error('Server error:', error);
                     throw new Error(error.error || 'Failed to get authentication options');
                 }
 
                 const options = await optionsResponse.json();
+                console.log('Login options:', options);
 
                 // Convert challenge and credential IDs from base64url
-                options.challenge = Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                options.challenge = Uint8Array.from(
+                    atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), 
+                    c => c.charCodeAt(0)
+                );
+
                 options.allowCredentials = options.allowCredentials.map(cred => ({
                     ...cred,
-                    id: Uint8Array.from(atob(cred.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+                    id: Uint8Array.from(
+                        atob(cred.id.replace(/-/g, '+').replace(/_/g, '/')), 
+                        c => c.charCodeAt(0)
+                    )
                 }));
+
+                console.log('Requesting credential from authenticator...');
 
                 // Get credential from authenticator
                 const credential = await navigator.credentials.get({ publicKey: options });
+                console.log('Credential received:', credential);
 
                 // Prepare credential for server
                 const credentialJSON = {
@@ -244,6 +176,8 @@
                     }
                 };
 
+                console.log('Verifying with server...');
+
                 // Verify with server
                 const verifyResponse = await fetch('/api/passkey/login-verify', {
                     method: 'POST',
@@ -252,6 +186,7 @@
                 });
 
                 const result = await verifyResponse.json();
+                console.log('Verification result:', result);
 
                 if (result.success) {
                     messageDiv.innerHTML = '<div class="success">✅ Login successful! Redirecting...</div>';
@@ -262,7 +197,18 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                messageDiv.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+                let errorMsg = error.message;
+
+                // User-friendly error messages
+                if (error.name === 'NotAllowedError') {
+                    errorMsg = 'Authentication cancelled or timed out';
+                } else if (error.message.includes('No passkey registered')) {
+                    errorMsg = 'No passkey found for this user. Please register a passkey first.';
+                } else if (error.message.includes('User not found')) {
+                    errorMsg = 'User not found. Please check your username or register.';
+                }
+
+                messageDiv.innerHTML = '<div class="error">❌ ' + errorMsg + '</div>';
                 loginBtn.disabled = false;
                 loginBtn.textContent = '🔑 Login with Passkey';
             }
