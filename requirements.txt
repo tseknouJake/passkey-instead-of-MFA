@@ -4,3 +4,4 @@ qrcode[pil]==7.4.2
 pyOpenSSL==24.0.0
 cryptography==42.0.0
 gunicorn==25.0.3
+psycopg2==2.9.11

@@ -8,70 +8,95 @@ import secrets
 import os
 import json
 from cryptography.fernet import Fernet
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
+
+USER = os.getenv("USER")
+PASSWORD = os.getenv("PASSWORD")
+HOST = os.getenv("HOST")
+PORT = os.getenv("PORT")
+DBNAME = os.getenv("DB_NAME")
+
+def get_db_connection():
+    connection = psycopg2.connect(
+        user=USER,
+        password=PASSWORD,
+        host=HOST,
+        port=PORT,
+        dbname=DBNAME,
+        sslmode = 'require'
+    )
+    print("Connected to database")
+    return connection
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
-
-# File-based user storage
-USERS_FILE = 'users.json'
-KEY_FILE = 'encryption.key'
 
 # ============================================
 # Encryption Functions
 # ============================================
 
-def get_encryption_key():
-    """Get or create encryption key"""
-    if os.path.exists(KEY_FILE):
-        with open(KEY_FILE, 'rb') as f:
-            return f.read()
-    else:
-        key = Fernet.generate_key()
-        with open(KEY_FILE, 'wb') as f:
-            f.write(key)
-        return key
+FERNET_KEY = os.environ.get("FERNET_KEY")
+
+if not FERNET_KEY:
+    raise ValueError("FERNET_KEY environment variable not set")
+
+f = Fernet(FERNET_KEY.encode())
 
 def encrypt_data(data):
-    """Encrypt data using Fernet"""
-    key = get_encryption_key()
-    f = Fernet(key)
     return f.encrypt(data.encode()).decode()
 
 def decrypt_data(encrypted_data):
-    """Decrypt data using Fernet"""
-    key = get_encryption_key()
-    f = Fernet(key)
     return f.decrypt(encrypted_data.encode()).decode()
 
-def load_users():
-    """Load and decrypt users from JSON file"""
-    if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, 'r') as f:
-            encrypted_users = json.load(f)
-            users = {}
-            for username, user_data in encrypted_users.items():
-                users[username] = {
-                    'password': decrypt_data(user_data['password']),
-                    'mfa_secret': decrypt_data(user_data['mfa_secret']) if user_data['mfa_secret'] else None,
-                    'passkey_credentials': user_data['passkey_credentials']
-                }
-            return users
-    return {}
+def get_user(username):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+    return user
 
-def save_users(users):
-    """Encrypt and save users to JSON file"""
-    encrypted_users = {}
-    for username, user_data in users.items():
-        encrypted_users[username] = {
-            'password': encrypt_data(user_data['password']),
-            'mfa_secret': encrypt_data(user_data['mfa_secret']) if user_data['mfa_secret'] else None,
-            'passkey_credentials': user_data['passkey_credentials']
-        }
-    with open(USERS_FILE, 'w') as f:
-        json.dump(encrypted_users, f, indent=4)
 
-# Load users at startup
-users = load_users()
+def create_user(username, password):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO users (username, password)
+        VALUES (%s, %s)
+    """, (username, password))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def update_mfa_secret(username, secret):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE users SET mfa_secret = %s WHERE username = %s
+    """, (secret, username))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def add_passkey_credential(username, credential):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE users
+        SET passkey_credentials = passkey_credentials || %s::jsonb
+        WHERE username = %s
+    """, (json.dumps([credential]), username))
+
+    conn.commit()
+    cur.close()
+    conn.close()
 
 def login_required(f):
     @wraps(f)
@@ -114,16 +139,11 @@ def register():
         if password != confirm_password:
             return render_template('register.html', error='Passwords do not match')
 
-        if username in users:
+        if get_user(username):
             return render_template('register.html', error='Username already exists')
 
         # Create new user
-        users[username] = {
-            'password': password,
-            'mfa_secret': None,
-            'passkey_credentials': []
-        }
-        save_users(users)
+        create_user(username, password)
 
         # Auto-login after registration
         session['username'] = username
@@ -149,13 +169,16 @@ def mfa_login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        if username in users and users[username]['password'] == password:
+        user = get_user(username)
+        if user and user['password'] == password:
             session['username'] = username
             session['auth_method'] = 'mfa'
             session['mfa_verified'] = False
             session['passkey_verified'] = False
 
-            if users[username]['mfa_secret']:
+            user = get_user(username)
+
+            if user and user['mfa_secret']:
                 return redirect(url_for('verify_mfa'))
             else:
                 return redirect(url_for('setup_mfa'))
@@ -172,8 +195,7 @@ def setup_mfa():
     username = session['username']
 
     secret = pyotp.random_base32()
-    users[username]['mfa_secret'] = secret
-    save_users(users)
+    update_mfa_secret(username, secret)
 
     totp = pyotp.TOTP(secret)
     provisioning_uri = totp.provisioning_uri(username, issuer_name="MFA Demo")
@@ -198,7 +220,8 @@ def verify_mfa():
 
     if request.method == 'POST':
         token = request.form.get('token')
-        secret = users[username]['mfa_secret']
+        user = get_user(username)
+        secret = user['mfa_secret']
 
         totp = pyotp.TOTP(secret)
         if totp.verify(token, valid_window=1):
@@ -223,7 +246,8 @@ def passkey_register():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        if username in users and users[username]['password'] == password:
+        user = get_user(username)
+        if user and user['password'] == password:
             session['username'] = username
             session['auth_method'] = 'passkey'
             session['passkey_verified'] = False
@@ -277,12 +301,7 @@ def passkey_register_verify():
 
     credential = request.json
 
-    users[username]['passkey_credentials'].append({
-        'id': credential.get('id'),
-        'rawId': credential.get('rawId'),
-        'type': credential.get('type')
-    })
-    save_users(users)
+    add_passkey_credential(username, credential)
 
     session['passkey_verified'] = True
 
@@ -293,10 +312,11 @@ def passkey_login_options():
     data = request.json
     username = data.get('username')
 
-    if username not in users:
+    user = get_user(username)
+    if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    if not users[username]['passkey_credentials']:
+    if not user['passkey_credentials']:
         return jsonify({'error': 'No passkey registered'}), 404
 
     hostname = request.host.split(':')[0]
@@ -309,7 +329,7 @@ def passkey_login_options():
             'type': 'public-key',
             'id': cred['rawId']
         }
-        for cred in users[username]['passkey_credentials']
+        for cred in user['passkey_credentials']
     ]
 
     options = {
