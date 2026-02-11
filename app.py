@@ -6,33 +6,19 @@ import base64
 from functools import wraps
 import secrets
 import os
-import json
 from cryptography.fernet import Fernet
-import psycopg2
+from supabase import create_client, Client
 from dotenv import load_dotenv
 
 load_dotenv()
 
-USER = os.getenv("USER")
-PASSWORD = os.getenv("PASSWORD")
-HOST = os.getenv("HOST")
-PORT = os.getenv("PORT")
-DBNAME = os.getenv("DB_NAME")
-
-def get_db_connection():
-    connection = psycopg2.connect(
-        user=USER,
-        password=PASSWORD,
-        host=HOST,
-        port=PORT,
-        dbname=DBNAME,
-        sslmode = 'require'
-    )
-    print("Connected to database")
-    return connection
-
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
+
+supabase: Client = create_client(
+    os.environ.get("SUPABASE_URL"),
+    os.environ.get("SUPABASE_KEY")
+)
 
 # ============================================
 # Encryption Functions
@@ -52,51 +38,26 @@ def decrypt_data(encrypted_data):
     return f.decrypt(encrypted_data.encode()).decode()
 
 def get_user(username):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE username = %s", (username,))
-    user = cur.fetchone()
-    cur.close()
-    conn.close()
-    return user
-
+    response = supabase.table("users").select("*").eq("username", username).execute()
+    # response.data is a list of dicts
+    return response.data[0] if response.data else None
 
 def create_user(username, password):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO users (username, password)
-        VALUES (%s, %s)
-    """, (username, password))
-    conn.commit()
-    cur.close()
-    conn.close()
-
+    supabase.table("users").insert({"username": username, "password": password}).execute()
 
 def update_mfa_secret(username, secret):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        UPDATE users SET mfa_secret = %s WHERE username = %s
-    """, (secret, username))
-    conn.commit()
-    cur.close()
-    conn.close()
-
+    supabase.table("users").update({"mfa_secret": secret}).eq("username", username).execute()
 
 def add_passkey_credential(username, credential):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    # Get current credentials first
+    user = get_user(username)
+    current_credentials = user.get("passkey_credentials") or []
 
-    cur.execute("""
-        UPDATE users
-        SET passkey_credentials = passkey_credentials || %s::jsonb
-        WHERE username = %s
-    """, (json.dumps([credential]), username))
+    # Append the new credential
+    updated_credentials = current_credentials + [credential]
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    # Update in Supabase
+    supabase.table("users").update({"passkey_credentials": updated_credentials}).eq("username", username).execute()
 
 def login_required(f):
     @wraps(f)
@@ -372,6 +333,5 @@ def logout():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    if __name__ == '__main__':
-        port = int(os.environ.get("PORT", 5000))
-        app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, ssl_context='adhoc')
