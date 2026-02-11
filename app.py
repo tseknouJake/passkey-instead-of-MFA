@@ -352,4 +352,4 @@ def logout():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, ssl_context='adhoc')
+    app.run(debug=True, port=5000, ssl_context='adhoc', host="0.0.0.0")
