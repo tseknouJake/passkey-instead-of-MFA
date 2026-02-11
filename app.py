@@ -9,6 +9,7 @@ import os
 from cryptography.fernet import Fernet
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -39,24 +40,26 @@ def decrypt_data(encrypted_data):
 
 def get_user(username):
     response = supabase.table("users").select("*").eq("username", username).execute()
-    # response.data is a list of dicts
-    return response.data[0] if response.data else None
+    user = response.data[0] if response.data else None
+    if user:
+        if user.get("password"):
+            user["password"] = decrypt_data(user["password"])
+        if user.get("mfa_secret"):
+            user["mfa_secret"] = decrypt_data(user["mfa_secret"])
+    return user
 
 def create_user(username, password):
-    supabase.table("users").insert({"username": username, "password": password}).execute()
+    encrypted_password = encrypt_data(password)
+    supabase.table("users").insert({"username": username, "password": encrypted_password}).execute()
 
 def update_mfa_secret(username, secret):
-    supabase.table("users").update({"mfa_secret": secret}).eq("username", username).execute()
+    encrypted_secret = encrypt_data(secret)
+    supabase.table("users").update({"mfa_secret": encrypted_secret}).eq("username", username).execute()
 
 def add_passkey_credential(username, credential):
-    # Get current credentials first
     user = get_user(username)
     current_credentials = user.get("passkey_credentials") or []
-
-    # Append the new credential
     updated_credentials = current_credentials + [credential]
-
-    # Update in Supabase
     supabase.table("users").update({"passkey_credentials": updated_credentials}).eq("username", username).execute()
 
 def login_required(f):
