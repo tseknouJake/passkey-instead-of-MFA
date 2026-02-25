@@ -106,7 +106,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Authentication Comparison</h1>
+        <h1>Authentication Comparison</h1>
         <p class="subtitle">Choose your authentication method</p>
 
         <div class="auth-options">
@@ -114,12 +114,6 @@
                 <div class="auth-icon">📱</div>
                 <h2>MFA Login</h2>
                 <p>Multi-Factor Authentication with TOTP</p>
-                <ul class="features">
-                    <li>✓ Password + Authenticator App</li>
-                    <li>✓ Time-based codes</li>
-                    <li>✓ Works on any device</li>
-                    <li>✗ Requires app setup</li>
-                    <li>✗ Need to enter codes</li>
                 </ul>
                 <a href="{{ url_for('mfa_login') }}" class="btn">Login with MFA</a>
             </div>
@@ -128,13 +122,6 @@
                 <div class="auth-icon">🔑</div>
                 <h2>Passkey Login</h2>
                 <p>Passwordless with Biometrics</p>
-                <ul class="features">
-                    <li>✓ No password needed</li>
-                    <li>✓ Fingerprint/Face ID</li>
-                    <li>✓ Faster login</li>
-                    <li>✓ More secure</li>
-                    <li>✓ No codes to remember</li>
-                </ul>
                 <a href="{{ url_for('passkey_login') }}" class="btn">Login with Passkey</a>
             </div>
 
@@ -152,7 +139,7 @@
                 <a href="{{ url_for('mfa_login') }}" class="btn">Login with MFA</a>
             </div>
 
-        <div class="comparison">
+        <!-- <div class="comparison">
             <h3>📊 Feature Comparison</h3>
             <table>
                 <thead>
@@ -190,10 +177,10 @@
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </div> -->
 
         <div class="register-section">
-            <h3>✨ New User?</h3>
+            <h3>New User?</h3>
             <p>Create an account and try both authentication methods</p>
             <a href="{{ url_for('register') }}" class="register-btn">Create Account</a>
         </div>

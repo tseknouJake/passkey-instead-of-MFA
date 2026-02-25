@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +25,7 @@
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 400px;
         }
@@ -116,10 +117,11 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <a href="{{ url_for('index') }}" class="back-btn">← Back to options</a>
-        <h1>📱 MFA Login</h1>
+        <h1>MFA Login</h1>
         <div class="method-badge">Multi-Factor Authentication</div>
         {% if error %}
         <div class="error">{{ error }}</div>
@@ -136,8 +138,16 @@
             <button type="submit">Continue to MFA</button>
         </form>
         <div class="info">
-            Demo: username = "admin", password = "password123"
+            <ul>
+                <div>Demo: username = "admin", password = "password123"</div>
+                <div>or</div>
+                <div>username: "jake", password = "jake1234"</div>
+            </ul>
+
+
+
         </div>
     </div>
 </body>
+
 </html>
