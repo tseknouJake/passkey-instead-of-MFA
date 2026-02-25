@@ -96,7 +96,11 @@
 </head>
 <body>
     <div class="container">
+        <a href="{{ url_for('index') }}" style="color:#667eea;text-decoration:none;font-size:14px;margin-bottom:20px;display:inline-block;">← Back to options</a>
         <h1>🔐 Login</h1>
+        <div style="background: #e8f5e9; text-align:center; padding:8px; border-radius:5px; margin-bottom:20px; font-weight:600; color:#2e7d32;">
+            Classic Username + Password
+        </div>
         {% if error %}
         <div class="error">{{ error }}</div>
         {% endif %}
@@ -112,7 +116,7 @@
             <button type="submit">Login</button>
         </form>
         <div class="info">
-            Demo: username = "admin", password = "password123"
+            No MFA code or passkey required for this path.
         </div>
     </div>
 </body>

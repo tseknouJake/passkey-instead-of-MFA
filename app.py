@@ -83,12 +83,18 @@ def login_required(f):
             return redirect(url_for('mfa_login'))
         elif auth_method == 'passkey' and not session.get('passkey_verified'):
             return redirect(url_for('passkey_login'))
+        elif auth_method == 'classic' and not session.get('classic_verified'):
+            return redirect(url_for('password_login'))
         return f(*args, **kwargs)
     return decorated_function
 
 @app.route('/')
 def index():
-    if 'username' in session and (session.get('mfa_verified') or session.get('passkey_verified')):
+    if 'username' in session and (
+        session.get('mfa_verified') or
+        session.get('passkey_verified') or
+        session.get('classic_verified')
+    ):
         return redirect(url_for('dashboard'))
     return render_template('index.html')
 
@@ -143,6 +149,24 @@ def setup_choice():
 # MFA Authentication Routes
 # ============================================
 
+@app.route('/login', methods=['GET', 'POST'])
+def password_login():
+    """Classic username/password login route"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if username in users and users[username]['password'] == password:
+            session['username'] = username
+            session['auth_method'] = 'classic'
+            session['classic_verified'] = True
+            session['mfa_verified'] = False
+            session['passkey_verified'] = False
+            return redirect(url_for('dashboard'))
+        return render_template('login.html', error='Invalid credentials')
+
+    return render_template('login.html')
+
 @app.route('/mfa-login', methods=['GET', 'POST'])
 def mfa_login():
     if request.method == 'POST':
@@ -154,6 +178,7 @@ def mfa_login():
             session['auth_method'] = 'mfa'
             session['mfa_verified'] = False
             session['passkey_verified'] = False
+            session['classic_verified'] = False
 
             if users[username]['mfa_secret']:
                 return redirect(url_for('verify_mfa'))
@@ -227,6 +252,7 @@ def passkey_register():
             session['username'] = username
             session['auth_method'] = 'passkey'
             session['passkey_verified'] = False
+            session['classic_verified'] = False
             return render_template('passkey_register.html', username=username)
         else:
             return render_template('passkey_register.html', error='Invalid credentials')
@@ -331,6 +357,7 @@ def passkey_login_verify():
     session['auth_method'] = 'passkey'
     session['passkey_verified'] = True
     session['mfa_verified'] = False
+    session['classic_verified'] = False
 
     return jsonify({'success': True})
 
