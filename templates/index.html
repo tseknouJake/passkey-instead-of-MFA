@@ -137,7 +137,20 @@
                 </ul>
                 <a href="{{ url_for('passkey_login') }}" class="btn">Login with Passkey</a>
             </div>
-        </div>
+
+            <div class="auth card classic" data-url="{{ url_for('mfa_login') }}">
+                <div class="auth-icon">📱</div>
+                <h2>Old fashioned password username login</h2>
+                <p>Normal login with no additional security</p>
+                <ul class="features">
+                    <li>✓ Password + Authenticator App</li>
+                    <li>✓ Time-based codes</li>
+                    <li>✓ Works on any device</li>
+                    <li>✗ Requires app setup</li>
+                    <li>✗ Need to enter codes</li>
+                </ul>
+                <a href="{{ url_for('mfa_login') }}" class="btn">Login with MFA</a>
+            </div>
 
         <div class="comparison">
             <h3>📊 Feature Comparison</h3>
