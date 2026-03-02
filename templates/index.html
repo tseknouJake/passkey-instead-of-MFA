@@ -204,16 +204,18 @@
         }
 
         .auth-card.google {
-        background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
-        color: white;
+            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+            color: white;
         }
+
         .auth-card.google .btn {
-        background: white;
-        color: #4285F4;
-        font-weight: 600;
+            background: white;
+            color: #4285F4;
+            font-weight: 600;
         }
+
         .auth-card.google .btn:hover {
-        background: #f1f1f1;
+            background: #f1f1f1;
         }
     </style>
 </head>
@@ -243,7 +245,7 @@
                 <h2>Google Login</h2>
                 <p>Login with your Google account</p>
                 <a href="{{ url_for('google_login_page') }}" class="btn">Login with Google</a>
-        </div>
+            </div>
 
             <div class="auth-card classic" data-url="{{ url_for('password_login') }}">
                 <div class="auth-icon">📱</div>
@@ -252,11 +254,13 @@
                 <a href="{{ url_for('password_login') }}" class="btn">Login with Password</a>
             </div>
 
-            <div class="register-section">
-                <h3>New User?</h3>
-                <p>Create an account and try both authentication methods</p>
-                <a href="{{ url_for('register') }}" class="register-btn">Create Account</a>
-            </div>
+
+        </div>
+
+        <div class="register-section center">
+            <h3>New User?</h3>
+            <p>Create an account and try different authentication methods</p>
+            <a href="{{ url_for('register') }}" class="register-btn">Create Account</a>
         </div>
 
         <script>
