@@ -8,25 +8,32 @@ import secrets
 import os
 import json
 from cryptography.fernet import Fernet
-from authlib.integrations.flask_client import OAuth
+try:
+    from authlib.integrations.flask_client import OAuth
+    GOOGLE_OAUTH_AVAILABLE = True
+except ModuleNotFoundError:
+    # Authlib's Flask integration depends on `requests`. If it's missing, keep
+    # the core app running and disable only Google login.
+    OAuth = None
+    GOOGLE_OAUTH_AVAILABLE = False
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
-oauth = OAuth(app)
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get("GOOGLE_CLIENT_ID")  # we'll set this next
 app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get("GOOGLE_CLIENT_SECRET")
 
-
-oauth.register(
-    name='google',
-    client_id=app.config['GOOGLE_CLIENT_ID'],
-    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={
-        'scope': 'openid email profile'
-    }
-)
+oauth = OAuth(app) if GOOGLE_OAUTH_AVAILABLE else None
+if oauth:
+    oauth.register(
+        name='google',
+        client_id=app.config['GOOGLE_CLIENT_ID'],
+        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
 
 # File-based user storage
 USERS_FILE = 'users.json'
@@ -404,16 +411,22 @@ def logout():
 
 @app.route('/google-login-page')
 def google_login_page():
+    if not GOOGLE_OAUTH_AVAILABLE:
+        return render_template('google_login.html', error='Google login is unavailable: missing OAuth dependencies.')
     return render_template('google_login.html')
 
 @app.route('/login/google')
 def login_google():
+    if not oauth:
+        return render_template('google_login.html', error='Google login is unavailable: missing OAuth dependencies.'), 503
     redirect_uri = url_for('google_callback', _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
 
 @app.route('/auth/google/callback')
 def google_callback():
+    if not oauth:
+        return render_template('google_login.html', error='Google login is unavailable: missing OAuth dependencies.'), 503
     # Exchange code for token
     token = oauth.google.authorize_access_token()
 

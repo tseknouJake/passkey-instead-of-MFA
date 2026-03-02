@@ -4,3 +4,4 @@ qrcode[pil]==7.4.2
 pyOpenSSL==24.0.0
 cryptography==42.0.0
 Authlib>=1.2.0
+requests>=2.31.0
