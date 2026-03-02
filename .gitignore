@@ -1,2 +1,3 @@
 encryption.key
-users.json 
+users.json
+.env

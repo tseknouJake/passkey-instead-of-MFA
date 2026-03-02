@@ -8,9 +8,25 @@ import secrets
 import os
 import json
 from cryptography.fernet import Fernet
+from authlib.integrations.flask_client import OAuth
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
+
+oauth = OAuth(app)
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get("GOOGLE_CLIENT_ID")  # we'll set this next
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get("GOOGLE_CLIENT_SECRET")
+
+
+oauth.register(
+    name='google',
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
 
 # File-based user storage
 USERS_FILE = 'users.json'
@@ -33,12 +49,18 @@ def get_encryption_key():
 
 def encrypt_data(data):
     """Encrypt data using Fernet"""
+
+    if data is None:
+        return None
     key = get_encryption_key()
     f = Fernet(key)
     return f.encrypt(data.encode()).decode()
 
 def decrypt_data(encrypted_data):
     """Decrypt data using Fernet"""
+
+    if encrypted_data is None:
+        return None
     key = get_encryption_key()
     f = Fernet(key)
     return f.decrypt(encrypted_data.encode()).decode()
@@ -83,6 +105,8 @@ def login_required(f):
             return redirect(url_for('mfa_login'))
         elif auth_method == 'passkey' and not session.get('passkey_verified'):
             return redirect(url_for('passkey_login'))
+        elif auth_method == 'social' and not session.get('social_verified'):
+            return redirect(url_for('index'))
         elif auth_method == 'classic' and not session.get('classic_verified'):
             return redirect(url_for('password_login'))
         return f(*args, **kwargs)
@@ -377,6 +401,43 @@ def dashboard():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+@app.route('/google-login-page')
+def google_login_page():
+    return render_template('google_login.html')
+
+@app.route('/login/google')
+def login_google():
+    redirect_uri = url_for('google_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/google/callback')
+def google_callback():
+    # Exchange code for token
+    token = oauth.google.authorize_access_token()
+
+    # Get user info from token
+    user_info = token.get('userinfo')
+    if not user_info:
+
+        user_info = oauth.google.parse_id_token(token, nonce=session.get('oauth_nonce'))
+
+    email = user_info['email']
+    if email not in users:
+        users[email] = {
+            'password': None,
+            'mfa_secret': None,
+            'passkey_credentials': [],
+            'social_accounts': {'google': True}
+        }
+        save_users(users)
+
+    session['username'] = email
+    session['auth_method'] = 'social'
+    session['social_verified'] = True
+
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, ssl_context='adhoc')
