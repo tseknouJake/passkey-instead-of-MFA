@@ -100,6 +100,18 @@
             transform: translateY(-2px);
         }
 
+        .disabled-btn {
+            width: 100%;
+            padding: 12px;
+            background: #9aa7c7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: not-allowed;
+        }
+
         .error {
             background: #fee;
             color: #c33;
@@ -126,11 +138,18 @@
         {% if error %}
         <div class="error">{{ error }}</div>
         {% endif %}
+        {% if oauth_available %}
         <form action="{{ url_for('login_google') }}" method="GET">
             <button type="submit">Continue with Google</button>
         </form>
+        {% else %}
+        <button class="disabled-btn" type="button" disabled>Google Login Unavailable</button>
+        {% endif %}
         <div class="info">
             <p>Login securely using your Google account.</p>
+            {% if not oauth_available %}
+            <p>Install dependencies: <code>python3 -m pip install -r requirements.txt</code></p>
+            {% endif %}
         </div>
     </div>
 </body>

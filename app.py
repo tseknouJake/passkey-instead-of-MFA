@@ -20,11 +20,53 @@ except ModuleNotFoundError:
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
-app.config['GOOGLE_CLIENT_ID'] = os.environ.get("GOOGLE_CLIENT_ID")  # we'll set this next
-app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get("GOOGLE_CLIENT_SECRET")
+
+def load_local_env(path=".env"):
+    """Load KEY=VALUE pairs from a local .env file without overriding existing env vars."""
+    if not os.path.exists(path):
+        return
+
+    with open(path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+load_local_env()
+
+app.config['GOOGLE_CLIENT_ID'] = (os.environ.get("GOOGLE_CLIENT_ID") or "").strip()
+app.config['GOOGLE_CLIENT_SECRET'] = (os.environ.get("GOOGLE_CLIENT_SECRET") or "").strip()
+
+
+def get_google_oauth_error():
+    """Return a user-facing configuration error for Google OAuth, or None."""
+    if not GOOGLE_OAUTH_AVAILABLE:
+        return 'Google login is unavailable: missing OAuth dependencies.'
+
+    client_id = app.config.get('GOOGLE_CLIENT_ID')
+    client_secret = app.config.get('GOOGLE_CLIENT_SECRET')
+
+    if not client_id or not client_secret:
+        return 'Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.'
+
+    if 'your-' in client_id.lower() or 'your-' in client_secret.lower():
+        return 'Google OAuth uses placeholder credentials. Replace with real Google Cloud OAuth values.'
+
+    if not client_id.endswith('.apps.googleusercontent.com'):
+        return 'GOOGLE_CLIENT_ID format looks invalid. It should end with .apps.googleusercontent.com.'
+
+    return None
 
 oauth = OAuth(app) if GOOGLE_OAUTH_AVAILABLE else None
-if oauth:
+if oauth and not get_google_oauth_error():
     oauth.register(
         name='google',
         client_id=app.config['GOOGLE_CLIENT_ID'],
@@ -411,24 +453,40 @@ def logout():
 
 @app.route('/google-login-page')
 def google_login_page():
-    if not GOOGLE_OAUTH_AVAILABLE:
-        return render_template('google_login.html', error='Google login is unavailable: missing OAuth dependencies.')
-    return render_template('google_login.html')
+    oauth_error = get_google_oauth_error()
+    return render_template('google_login.html', error=oauth_error, oauth_available=oauth_error is None)
 
 @app.route('/login/google')
 def login_google():
-    if not oauth:
-        return render_template('google_login.html', error='Google login is unavailable: missing OAuth dependencies.'), 503
+    oauth_error = get_google_oauth_error()
+    if oauth_error:
+        return render_template(
+            'google_login.html',
+            error=oauth_error,
+            oauth_available=False
+        ), 503
     redirect_uri = url_for('google_callback', _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
 
 @app.route('/auth/google/callback')
 def google_callback():
-    if not oauth:
-        return render_template('google_login.html', error='Google login is unavailable: missing OAuth dependencies.'), 503
-    # Exchange code for token
-    token = oauth.google.authorize_access_token()
+    oauth_error = get_google_oauth_error()
+    if oauth_error:
+        return render_template(
+            'google_login.html',
+            error=oauth_error,
+            oauth_available=False
+        ), 503
+    try:
+        # Exchange code for token
+        token = oauth.google.authorize_access_token()
+    except Exception:
+        return render_template(
+            'google_login.html',
+            error='Google OAuth callback failed. Verify client credentials and redirect URI.',
+            oauth_available=False
+        ), 401
 
     # Get user info from token
     user_info = token.get('userinfo')
