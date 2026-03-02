@@ -204,13 +204,12 @@
         }
 
         .auth-card.google {
-            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
-            color: white;
+            background: linear-gradient(135deg, #69a3ff 0%, #9bffb5 100%);
         }
 
         .auth-card.google .btn {
-            background: white;
-            color: #4285F4;
+            background: black;
+            color: white;
             font-weight: 600;
         }
 
@@ -264,10 +263,8 @@
         </div>
 
         <script>
-            // Add click handlers to cards (no inline onclick)
             document.querySelectorAll('.auth-card').forEach(card => {
                 card.addEventListener('click', function (e) {
-                    // Don't trigger if clicking the link directly
                     if (e.target.tagName !== 'A') {
                         window.location.href = this.dataset.url;
                     }
