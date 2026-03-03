@@ -7,19 +7,87 @@ from functools import wraps
 import secrets
 import os
 from cryptography.fernet import Fernet
-from supabase import create_client, Client
-from dotenv import load_dotenv
-import json
-
-load_dotenv()
+try:
+    from authlib.integrations.flask_client import OAuth
+    GOOGLE_OAUTH_AVAILABLE = True
+except ModuleNotFoundError:
+    # Authlib's Flask integration depends on `requests`. If it's missing, keep
+    # the core app running and disable only Google login.
+    OAuth = None
+    GOOGLE_OAUTH_AVAILABLE = False
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
-supabase: Client = create_client(
-    os.environ.get("SUPABASE_URL"),
-    os.environ.get("SUPABASE_KEY")
-)
+
+def load_local_env(path=".env"):
+    """Load KEY=VALUE pairs from a local .env file without overriding existing env vars."""
+    if not os.path.exists(path):
+        return
+
+    with open(path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+load_local_env()
+
+app.config['GOOGLE_CLIENT_ID'] = (os.environ.get("GOOGLE_CLIENT_ID") or "").strip()
+app.config['GOOGLE_CLIENT_SECRET'] = (os.environ.get("GOOGLE_CLIENT_SECRET") or "").strip()
+app.config['GOOGLE_REDIRECT_URI'] = (os.environ.get("GOOGLE_REDIRECT_URI") or "").strip()
+
+
+def get_google_oauth_error():
+    """Return a user-facing configuration error for Google OAuth, or None."""
+    if not GOOGLE_OAUTH_AVAILABLE:
+        return 'Google login is unavailable: missing OAuth dependencies.'
+
+    client_id = app.config.get('GOOGLE_CLIENT_ID')
+    client_secret = app.config.get('GOOGLE_CLIENT_SECRET')
+
+    if not client_id or not client_secret:
+        return 'Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.'
+
+    if 'your-' in client_id.lower() or 'your-' in client_secret.lower():
+        return 'Google OAuth uses placeholder credentials. Replace with real Google Cloud OAuth values.'
+
+    if not client_id.endswith('.apps.googleusercontent.com'):
+        return 'GOOGLE_CLIENT_ID format looks invalid. It should end with .apps.googleusercontent.com.'
+
+    return None
+
+
+def get_google_redirect_uri():
+    """Return redirect URI from env override or request-derived callback URL."""
+    configured_uri = app.config.get('GOOGLE_REDIRECT_URI')
+    if configured_uri:
+        return configured_uri
+    return url_for('google_callback', _external=True)
+
+oauth = OAuth(app) if GOOGLE_OAUTH_AVAILABLE else None
+if oauth and not get_google_oauth_error():
+    oauth.register(
+        name='google',
+        client_id=app.config['GOOGLE_CLIENT_ID'],
+        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
+
+# File-based user storage
+USERS_FILE = 'users.json'
+KEY_FILE = 'encryption.key'
 
 # ============================================
 # Encryption Functions
@@ -33,9 +101,21 @@ if not FERNET_KEY:
 f = Fernet(FERNET_KEY.encode())
 
 def encrypt_data(data):
+    """Encrypt data using Fernet"""
+
+    if data is None:
+        return None
+    key = get_encryption_key()
+    f = Fernet(key)
     return f.encrypt(data.encode()).decode()
 
 def decrypt_data(encrypted_data):
+    """Decrypt data using Fernet"""
+
+    if encrypted_data is None:
+        return None
+    key = get_encryption_key()
+    f = Fernet(key)
     return f.decrypt(encrypted_data.encode()).decode()
 
 def get_user(username):
@@ -72,12 +152,20 @@ def login_required(f):
             return redirect(url_for('mfa_login'))
         elif auth_method == 'passkey' and not session.get('passkey_verified'):
             return redirect(url_for('passkey_login'))
+        elif auth_method == 'social' and not session.get('social_verified'):
+            return redirect(url_for('index'))
+        elif auth_method == 'classic' and not session.get('classic_verified'):
+            return redirect(url_for('password_login'))
         return f(*args, **kwargs)
     return decorated_function
 
 @app.route('/')
 def index():
-    if 'username' in session and (session.get('mfa_verified') or session.get('passkey_verified')):
+    if 'username' in session and (
+        session.get('mfa_verified') or
+        session.get('passkey_verified') or
+        session.get('classic_verified')
+    ):
         return redirect(url_for('dashboard'))
     return render_template('index.html')
 
@@ -127,6 +215,24 @@ def setup_choice():
 # MFA Authentication Routes
 # ============================================
 
+@app.route('/login', methods=['GET', 'POST'])
+def password_login():
+    """Classic username/password login route"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if username in users and users[username]['password'] == password:
+            session['username'] = username
+            session['auth_method'] = 'classic'
+            session['classic_verified'] = True
+            session['mfa_verified'] = False
+            session['passkey_verified'] = False
+            return redirect(url_for('dashboard'))
+        return render_template('login.html', error='Invalid credentials')
+
+    return render_template('login.html')
+
 @app.route('/mfa-login', methods=['GET', 'POST'])
 def mfa_login():
     if request.method == 'POST':
@@ -139,10 +245,9 @@ def mfa_login():
             session['auth_method'] = 'mfa'
             session['mfa_verified'] = False
             session['passkey_verified'] = False
+            session['classic_verified'] = False
 
-            user = get_user(username)
-
-            if user and user['mfa_secret']:
+            if users[username]['mfa_secret']:
                 return redirect(url_for('verify_mfa'))
             else:
                 return redirect(url_for('setup_mfa'))
@@ -215,6 +320,7 @@ def passkey_register():
             session['username'] = username
             session['auth_method'] = 'passkey'
             session['passkey_verified'] = False
+            session['classic_verified'] = False
             return render_template('passkey_register.html', username=username)
         else:
             return render_template('passkey_register.html', error='Invalid credentials')
@@ -315,6 +421,7 @@ def passkey_login_verify():
     session['auth_method'] = 'passkey'
     session['passkey_verified'] = True
     session['mfa_verified'] = False
+    session['classic_verified'] = False
 
     return jsonify({'success': True})
 
@@ -334,6 +441,71 @@ def dashboard():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+@app.route('/google-login-page')
+def google_login_page():
+    oauth_error = get_google_oauth_error()
+    callback_uri = get_google_redirect_uri()
+    return render_template(
+        'google_login.html',
+        error=oauth_error,
+        oauth_available=oauth_error is None,
+        callback_uri=callback_uri
+    )
+
+@app.route('/login/google')
+def login_google():
+    oauth_error = get_google_oauth_error()
+    if oauth_error:
+        return render_template(
+            'google_login.html',
+            error=oauth_error,
+            oauth_available=False
+        ), 503
+    redirect_uri = get_google_redirect_uri()
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/google/callback')
+def google_callback():
+    oauth_error = get_google_oauth_error()
+    if oauth_error:
+        return render_template(
+            'google_login.html',
+            error=oauth_error,
+            oauth_available=False
+        ), 503
+    try:
+        # Exchange code for token
+        token = oauth.google.authorize_access_token()
+    except Exception:
+        return render_template(
+            'google_login.html',
+            error='Google OAuth callback failed. Verify client credentials and redirect URI.',
+            oauth_available=False
+        ), 401
+
+    # Get user info from token
+    user_info = token.get('userinfo')
+    if not user_info:
+
+        user_info = oauth.google.parse_id_token(token, nonce=session.get('oauth_nonce'))
+
+    email = user_info['email']
+    if email not in users:
+        users[email] = {
+            'password': None,
+            'mfa_secret': None,
+            'passkey_credentials': [],
+            'social_accounts': {'google': True}
+        }
+        save_users(users)
+
+    session['username'] = email
+    session['auth_method'] = 'social'
+    session['social_verified'] = True
+
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
