@@ -44,6 +44,7 @@ load_local_env()
 
 app.config['GOOGLE_CLIENT_ID'] = (os.environ.get("GOOGLE_CLIENT_ID") or "").strip()
 app.config['GOOGLE_CLIENT_SECRET'] = (os.environ.get("GOOGLE_CLIENT_SECRET") or "").strip()
+app.config['GOOGLE_REDIRECT_URI'] = (os.environ.get("GOOGLE_REDIRECT_URI") or "").strip()
 
 
 def get_google_oauth_error():
@@ -64,6 +65,14 @@ def get_google_oauth_error():
         return 'GOOGLE_CLIENT_ID format looks invalid. It should end with .apps.googleusercontent.com.'
 
     return None
+
+
+def get_google_redirect_uri():
+    """Return redirect URI from env override or request-derived callback URL."""
+    configured_uri = app.config.get('GOOGLE_REDIRECT_URI')
+    if configured_uri:
+        return configured_uri
+    return url_for('google_callback', _external=True)
 
 oauth = OAuth(app) if GOOGLE_OAUTH_AVAILABLE else None
 if oauth and not get_google_oauth_error():
@@ -454,7 +463,13 @@ def logout():
 @app.route('/google-login-page')
 def google_login_page():
     oauth_error = get_google_oauth_error()
-    return render_template('google_login.html', error=oauth_error, oauth_available=oauth_error is None)
+    callback_uri = get_google_redirect_uri()
+    return render_template(
+        'google_login.html',
+        error=oauth_error,
+        oauth_available=oauth_error is None,
+        callback_uri=callback_uri
+    )
 
 @app.route('/login/google')
 def login_google():
@@ -465,7 +480,7 @@ def login_google():
             error=oauth_error,
             oauth_available=False
         ), 503
-    redirect_uri = url_for('google_callback', _external=True)
+    redirect_uri = get_google_redirect_uri()
     return oauth.google.authorize_redirect(redirect_uri)
 
 
