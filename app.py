@@ -12,6 +12,8 @@ try:
     from authlib.integrations.flask_client import OAuth
     GOOGLE_OAUTH_AVAILABLE = True
 except ModuleNotFoundError:
+    # Authlib's Flask integration depends on `requests`. If it's missing, keep
+    # the core app running and disable only Google login.
     OAuth = None
     GOOGLE_OAUTH_AVAILABLE = False
 
