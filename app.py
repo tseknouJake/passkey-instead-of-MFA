@@ -6,7 +6,6 @@ import base64
 from functools import wraps
 import secrets
 import os
-import json
 from cryptography.fernet import Fernet
 try:
     from authlib.integrations.flask_client import OAuth
@@ -94,16 +93,12 @@ KEY_FILE = 'encryption.key'
 # Encryption Functions
 # ============================================
 
-def get_encryption_key():
-    """Get or create encryption key"""
-    if os.path.exists(KEY_FILE):
-        with open(KEY_FILE, 'rb') as f:
-            return f.read()
-    else:
-        key = Fernet.generate_key()
-        with open(KEY_FILE, 'wb') as f:
-            f.write(key)
-        return key
+FERNET_KEY = os.environ.get("FERNET_KEY")
+
+if not FERNET_KEY:
+    raise ValueError("FERNET_KEY environment variable not set")
+
+f = Fernet(FERNET_KEY.encode())
 
 def encrypt_data(data):
     """Encrypt data using Fernet"""
@@ -123,35 +118,29 @@ def decrypt_data(encrypted_data):
     f = Fernet(key)
     return f.decrypt(encrypted_data.encode()).decode()
 
-def load_users():
-    """Load and decrypt users from JSON file"""
-    if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, 'r') as f:
-            encrypted_users = json.load(f)
-            users = {}
-            for username, user_data in encrypted_users.items():
-                users[username] = {
-                    'password': decrypt_data(user_data['password']),
-                    'mfa_secret': decrypt_data(user_data['mfa_secret']) if user_data['mfa_secret'] else None,
-                    'passkey_credentials': user_data['passkey_credentials']
-                }
-            return users
-    return {}
+def get_user(username):
+    response = supabase.table("users").select("*").eq("username", username).execute()
+    user = response.data[0] if response.data else None
+    if user:
+        if user.get("password"):
+            user["password"] = decrypt_data(user["password"])
+        if user.get("mfa_secret"):
+            user["mfa_secret"] = decrypt_data(user["mfa_secret"])
+    return user
 
-def save_users(users):
-    """Encrypt and save users to JSON file"""
-    encrypted_users = {}
-    for username, user_data in users.items():
-        encrypted_users[username] = {
-            'password': encrypt_data(user_data['password']),
-            'mfa_secret': encrypt_data(user_data['mfa_secret']) if user_data['mfa_secret'] else None,
-            'passkey_credentials': user_data['passkey_credentials']
-        }
-    with open(USERS_FILE, 'w') as f:
-        json.dump(encrypted_users, f, indent=4)
+def create_user(username, password):
+    encrypted_password = encrypt_data(password)
+    supabase.table("users").insert({"username": username, "password": encrypted_password}).execute()
 
-# Load users at startup
-users = load_users()
+def update_mfa_secret(username, secret):
+    encrypted_secret = encrypt_data(secret)
+    supabase.table("users").update({"mfa_secret": encrypted_secret}).eq("username", username).execute()
+
+def add_passkey_credential(username, credential):
+    user = get_user(username)
+    current_credentials = user.get("passkey_credentials") or []
+    updated_credentials = current_credentials + [credential]
+    supabase.table("users").update({"passkey_credentials": updated_credentials}).eq("username", username).execute()
 
 def login_required(f):
     @wraps(f)
@@ -202,16 +191,11 @@ def register():
         if password != confirm_password:
             return render_template('register.html', error='Passwords do not match')
 
-        if username in users:
+        if get_user(username):
             return render_template('register.html', error='Username already exists')
 
         # Create new user
-        users[username] = {
-            'password': password,
-            'mfa_secret': None,
-            'passkey_credentials': []
-        }
-        save_users(users)
+        create_user(username, password)
 
         # Auto-login after registration
         session['username'] = username
@@ -255,7 +239,8 @@ def mfa_login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        if username in users and users[username]['password'] == password:
+        user = get_user(username)
+        if user and user['password'] == password:
             session['username'] = username
             session['auth_method'] = 'mfa'
             session['mfa_verified'] = False
@@ -279,8 +264,7 @@ def setup_mfa():
     username = session['username']
 
     secret = pyotp.random_base32()
-    users[username]['mfa_secret'] = secret
-    save_users(users)
+    update_mfa_secret(username, secret)
 
     totp = pyotp.TOTP(secret)
     provisioning_uri = totp.provisioning_uri(username, issuer_name="MFA Demo")
@@ -305,7 +289,8 @@ def verify_mfa():
 
     if request.method == 'POST':
         token = request.form.get('token')
-        secret = users[username]['mfa_secret']
+        user = get_user(username)
+        secret = user['mfa_secret']
 
         totp = pyotp.TOTP(secret)
         if totp.verify(token, valid_window=1):
@@ -330,7 +315,8 @@ def passkey_register():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        if username in users and users[username]['password'] == password:
+        user = get_user(username)
+        if user and user['password'] == password:
             session['username'] = username
             session['auth_method'] = 'passkey'
             session['passkey_verified'] = False
@@ -385,12 +371,7 @@ def passkey_register_verify():
 
     credential = request.json
 
-    users[username]['passkey_credentials'].append({
-        'id': credential.get('id'),
-        'rawId': credential.get('rawId'),
-        'type': credential.get('type')
-    })
-    save_users(users)
+    add_passkey_credential(username, credential)
 
     session['passkey_verified'] = True
 
@@ -401,10 +382,11 @@ def passkey_login_options():
     data = request.json
     username = data.get('username')
 
-    if username not in users:
+    user = get_user(username)
+    if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    if not users[username]['passkey_credentials']:
+    if not user['passkey_credentials']:
         return jsonify({'error': 'No passkey registered'}), 404
 
     hostname = request.host.split(':')[0]
@@ -417,7 +399,7 @@ def passkey_login_options():
             'type': 'public-key',
             'id': cred['rawId']
         }
-        for cred in users[username]['passkey_credentials']
+        for cred in user['passkey_credentials']
     ]
 
     options = {
@@ -526,4 +508,5 @@ def google_callback():
     return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, ssl_context='adhoc')
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, ssl_context='adhoc')
