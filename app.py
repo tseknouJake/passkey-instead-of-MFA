@@ -12,6 +12,12 @@ from dotenv import load_dotenv
 import json
 
 load_dotenv()
+try:
+    from authlib.integrations.flask_client import OAuth
+    GOOGLE_OAUTH_AVAILABLE = True
+except ModuleNotFoundError:
+    OAuth = None
+    GOOGLE_OAUTH_AVAILABLE = False
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
