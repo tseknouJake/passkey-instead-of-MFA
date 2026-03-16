@@ -29,7 +29,6 @@ supabase: Client = create_client(
 
 # ============================================
 # Encryption Functions
-# ==========================================
 
 FERNET_KEY = os.environ.get("FERNET_KEY")
 
