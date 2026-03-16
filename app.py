@@ -6,10 +6,13 @@ import base64
 from functools import wraps
 import secrets
 import os
+import hashlib
+import ipaddress
 from cryptography.fernet import Fernet
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import json
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 try:
@@ -20,10 +23,10 @@ except ModuleNotFoundError:
     GOOGLE_OAUTH_AVAILABLE = False
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
 app.config["GOOGLE_CLIENT_ID"] = (os.environ.get("GOOGLE_CLIENT_ID") or "").strip()
 app.config["GOOGLE_CLIENT_SECRET"] = (os.environ.get("GOOGLE_CLIENT_SECRET") or "").strip()
 app.config["GOOGLE_REDIRECT_URI"] = (os.environ.get("GOOGLE_REDIRECT_URI") or "").strip()
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 supabase: Client = create_client(
     os.environ.get("SUPABASE_URL"),
@@ -76,6 +79,60 @@ if not FERNET_KEY:
     raise ValueError("FERNET_KEY environment variable not set")
 
 f = Fernet(FERNET_KEY.encode())
+
+
+def get_flask_secret_key():
+    configured_secret = (os.environ.get("SECRET_KEY") or "").strip()
+    if configured_secret:
+        return configured_secret
+
+    # Keep session signing stable across Gunicorn workers when SECRET_KEY is not set.
+    return hashlib.sha256(FERNET_KEY.encode()).hexdigest()
+
+
+def env_flag(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def normalize_passkey_host(hostname):
+    host = (hostname or "").strip().lower().strip("[]")
+    if not host:
+        raise ValueError("Unable to determine the current hostname for passkey login.")
+
+    if host == "localhost":
+        return host
+
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+
+    if ip:
+        if ip.is_loopback or ip.is_unspecified:
+            return "localhost"
+        raise ValueError("Passkeys require a domain name. Use localhost locally or serve the app from your HTTPS domain.")
+
+    if "." not in host:
+        raise ValueError("Passkeys require localhost or a fully qualified domain name.")
+
+    return host
+
+
+def get_passkey_rp_id():
+    configured_rp_id = (os.environ.get("PASSKEY_RP_ID") or "").strip()
+    if configured_rp_id:
+        return normalize_passkey_host(configured_rp_id)
+    return normalize_passkey_host(request.host.split(":", 1)[0])
+
+
+app.secret_key = get_flask_secret_key()
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = env_flag("SESSION_COOKIE_SECURE")
+app.config["PREFERRED_URL_SCHEME"] = "https" if env_flag("PREFERRED_URL_SCHEME_HTTPS") else "http"
 
 def encrypt_data(data):
     return f.encrypt(data.encode()).decode()
@@ -140,6 +197,29 @@ def index():
     ):
         return redirect(url_for('dashboard'))
     return render_template('index.html')
+
+
+@app.before_request
+def normalize_local_passkey_origin():
+    if os.environ.get("PASSKEY_RP_ID"):
+        return None
+
+    hostname = request.host.split(":", 1)[0]
+    try:
+        normalized_host = normalize_passkey_host(hostname)
+    except ValueError:
+        return None
+
+    if normalized_host == hostname:
+        return None
+
+    host_port = request.host.split(":", 1)
+    if len(host_port) == 2:
+        target_host = f"{normalized_host}:{host_port[1]}"
+    else:
+        target_host = normalized_host
+
+    return redirect(f"{request.scheme}://{target_host}{request.full_path.rstrip('?')}", code=302)
 
 # ============================================
 # User Registration
@@ -312,7 +392,7 @@ def passkey_register_options():
     if not username:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    hostname = request.host.split(':')[0]
+    rp_id = get_passkey_rp_id()
     challenge = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
     session['passkey_challenge'] = challenge
 
@@ -320,7 +400,7 @@ def passkey_register_options():
         'challenge': challenge,
         'rp': {
             'name': 'Passkey Demo',
-            'id': hostname
+            'id': rp_id
         },
         'user': {
             'id': base64.urlsafe_b64encode(username.encode()).decode('utf-8').rstrip('='),
@@ -368,7 +448,7 @@ def passkey_login_options():
     if not user['passkey_credentials']:
         return jsonify({'error': 'No passkey registered'}), 404
 
-    hostname = request.host.split(':')[0]
+    rp_id = get_passkey_rp_id()
     challenge = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
     session['passkey_challenge'] = challenge
     session['username'] = username
@@ -384,7 +464,7 @@ def passkey_login_options():
     options = {
         'challenge': challenge,
         'timeout': 60000,
-        'rpId': hostname,
+        'rpId': rp_id,
         'allowCredentials': allowed_credentials,
         'userVerification': 'required'
     }
