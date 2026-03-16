@@ -55,7 +55,7 @@ Dependencies installed:
 python3 app.py
 ```
 
-The app will start on **https://localhost:5000** (HTTPS required for passkeys)
+The app will start on **https://localhost:5001** (HTTPS required for passkeys)
 
 On first run, the app will automatically:
 - Generate an encryption key (`encryption.key`)
@@ -67,7 +67,7 @@ On first run, the app will automatically:
 
 ### Register a New Account
 
-1. Go to https://localhost:5000
+1. Go to https://localhost:5001
 2. Click **"Create Account"** button at the bottom
 3. Enter username and password (minimum 8 characters)
 4. Confirm password
@@ -209,7 +209,7 @@ Passkeys work in:
 ## Troubleshooting
 
 ### "Passkey not working"
-- Ensure you're using **https://localhost:5000** (not http://)
+- Ensure you're using **https://localhost:5001** (not http://)
 - Check browser supports WebAuthn
 - Ensure biometrics are set up on your device
 - Try using **localhost** instead of **127.0.0.1** in URL

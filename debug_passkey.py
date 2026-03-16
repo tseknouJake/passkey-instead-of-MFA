@@ -132,7 +132,7 @@ elif os.path.exists('users.json'):
 print("\n🎯 NEXT STEPS:")
 print("-" * 70)
 print("1. Run your Flask app: python3 app.py")
-print("2. Open browser to: https://localhost:5000")
+print("2. Open browser to: https://localhost:5001")
 print("3. Open browser console: Press F12 → Console tab")
 print("4. Try to register a passkey")
 print("5. Share any RED error messages from console")

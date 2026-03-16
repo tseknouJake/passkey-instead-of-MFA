@@ -46,6 +46,8 @@
         }
         .auth-card.mfa { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
         .auth-card.passkey { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+        .auth-card.google { background: linear-gradient(135deg, #69a3ff 0%, #9bffb5 100%); }
+        /* .auth-card.classic { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); } */
         .auth-icon { font-size: 72px; margin-bottom: 20px; }
         .auth-card h2 { color: #333; margin-bottom: 15px; font-size: 28px; }
         .auth-card p { color: #555; line-height: 1.6; margin-bottom: 20px; }
@@ -102,6 +104,14 @@
         @media (max-width: 768px) {
             .auth-options { grid-template-columns: 1fr; }
         }
+        .auth-card.google .btn {
+            background: black;
+            color: white;
+            font-weight: 600;
+        }
+        .auth-card.google .btn:hover {
+            background: #f1f1f1;
+        }
     </style>
 </head>
 <body>
@@ -123,6 +133,20 @@
                 <h2>Passkey Login</h2>
                 <p>Passwordless with Biometrics</p>
                 <a href="{{ url_for('passkey_login') }}" class="btn">Login with Passkey</a>
+            </div>
+
+            <div class="auth-card google" data-url="{{ url_for('google_login_page') }}">
+                <div class="auth-icon">📨</div>
+                <h2>Google Login</h2>
+                <p>Login with your Google account</p>
+                <a href="{{ url_for('google_login_page') }}" class="btn">Login with Google</a>
+            </div>
+
+            <div class="auth-card classic" data-url="{{ url_for('password_login') }}">
+                <div class="auth-icon">📱</div>
+                <h2>Old fashioned password username login</h2>
+                <p>Normal login with no additional security</p>
+                <a href="{{ url_for('password_login') }}" class="btn">Login with Password</a>
             </div>
         </div>
 
@@ -168,7 +192,7 @@
 
         <div class="register-section">
             <h3>New User?</h3>
-            <p>Create an account and try both authentication methods</p>
+            <p>Create an account and try different authentication methods</p>
             <a href="{{ url_for('register') }}" class="register-btn">Create Account</a>
         </div>
     </div>
