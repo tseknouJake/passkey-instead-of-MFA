@@ -46,20 +46,20 @@ def create_user(username: str, password: str) -> None:
         "password": encrypted_password
     }).execute()
 
-#TODO: remove and use "create_user" instead (require entering a password at first login)
-# @Irina
-def create_social_user(username: str, provider: str) -> None:
-    """
-    Create a user registered via a social provider.
-
-    Args:
-        username (str): Typically the user's email.
-        provider (str): The social provider (e.g., 'google').
-    """
-    supabase.table("users").insert({
-        "username": username,
-        "password": None
-    }).execute()
+# #TODO: remove and use "create_user" instead (require entering a password at first login)
+# # @Irina
+# def create_social_user(username: str, provider: str) -> None:
+#     """
+#     Create a user registered via a social provider.
+#
+#     Args:
+#         username (str): Typically the user's email.
+#         provider (str): The social provider (e.g., 'google').
+#     """
+#     supabase.table("users").insert({
+#         "username": username,
+#         "password": None
+#     }).execute()
 
 
 def update_mfa_secret(username: str, secret: str) -> None:
