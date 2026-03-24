@@ -8,9 +8,9 @@ import os
 import hashlib
 import ipaddress
 from cryptography.fernet import Fernet
-from supabase import create_client, Client
 from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
+from modules.database import supabase
 
 load_dotenv()
 try:
@@ -25,11 +25,6 @@ app.config["GOOGLE_CLIENT_ID"] = (os.environ.get("GOOGLE_CLIENT_ID") or "").stri
 app.config["GOOGLE_CLIENT_SECRET"] = (os.environ.get("GOOGLE_CLIENT_SECRET") or "").strip()
 app.config["GOOGLE_REDIRECT_URI"] = (os.environ.get("GOOGLE_REDIRECT_URI") or "").strip()
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
-
-supabase: Client = create_client(
-    os.environ.get("SUPABASE_URL"),
-    os.environ.get("SUPABASE_KEY")
-)
 
 
 def get_google_oauth_error():
