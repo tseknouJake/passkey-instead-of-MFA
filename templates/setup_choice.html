@@ -73,11 +73,11 @@
         <p class="subtitle">Welcome, <strong>{{ username }}</strong>! Choose how you want to secure your account</p>
 
         <div class="auth-options">
-            <div class="auth-card mfa" data-url="{{ url_for('setup_mfa') }}">
+            <div class="auth-card mfa" data-url="{{ url_for('auth_otp.setup_mfa') }}">
                 <div class="auth-icon">📱</div>
                 <h2>Setup MFA</h2>
                 <p>Use an authenticator app for two-factor authentication</p>
-                <a href="{{ url_for('setup_mfa') }}" class="btn">Setup MFA</a>
+                <a href="{{ url_for('auth_otp.setup_mfa') }}" class="btn">Setup MFA</a>
             </div>
 
             <div class="auth-card passkey" data-url="{{ url_for('passkey_register') }}">

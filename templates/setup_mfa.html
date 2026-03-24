@@ -108,7 +108,7 @@
             <div class="secret-code">{{ secret }}</div>
         </div>
 
-        <form action="{{ url_for('verify_mfa') }}" method="GET">
+        <form action="{{ url_for('auth_otp.verify_mfa') }}" method="GET">
             <button type="submit">Continue to Verification</button>
         </form>
     </div>

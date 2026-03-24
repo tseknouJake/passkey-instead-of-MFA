@@ -120,12 +120,12 @@
         <p class="subtitle">Choose your authentication method</p>
 
         <div class="auth-options">
-            <div class="auth-card mfa" data-url="{{ url_for('mfa_login') }}">
+            <div class="auth-card mfa" data-url="{{ url_for('auth_otp.mfa_login') }}">
                 <div class="auth-icon">📱</div>
                 <h2>MFA Login</h2>
                 <p>Multi-Factor Authentication with TOTP</p>
                 </ul>
-                <a href="{{ url_for('mfa_login') }}" class="btn">Login with MFA</a>
+                <a href="{{ url_for('auth_otp.mfa_login') }}" class="btn">Login with MFA</a>
             </div>
 
             <div class="auth-card passkey" data-url="{{ url_for('passkey_login') }}">

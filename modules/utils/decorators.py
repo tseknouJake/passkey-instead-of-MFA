@@ -32,7 +32,7 @@ def login_required(f): #TODO: refactor nested function
         auth_method = session.get('auth_method')
 
         if auth_method == 'mfa' and not session.get('mfa_verified'):
-            return redirect(url_for('mfa_login'))
+            return redirect(url_for('auth_otp.mfa_login'))
 
         elif auth_method == 'passkey' and not session.get('passkey_verified'):
             return redirect(url_for('passkey_login'))
