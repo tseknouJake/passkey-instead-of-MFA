@@ -88,7 +88,7 @@ def google_callback():
     if not get_user(email):
         session['pending_social_email'] = email
         session['pending_social_provider'] = 'google'
-        return redirect(url_for('auth_social.social_setup_password'))
+        return redirect(url_for('auth_social.setup_password'))
 
     session['username'] = email
     session['auth_method'] = 'social'
