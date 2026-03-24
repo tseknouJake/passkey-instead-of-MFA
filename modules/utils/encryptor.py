@@ -11,6 +11,8 @@ import hashlib
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 
+#TODO: add password hashing @Jake
+
 load_dotenv()
 
 FERNET_KEY = os.environ.get("FERNET_KEY")
