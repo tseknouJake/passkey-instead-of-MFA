@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="85e6c5b4-ffef-4e58-9010-2e463a176b54" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/modules/routes/auth_social.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/routes/auth_social.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/services/user_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/services/user_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,7 +148,7 @@
       <workItem from="1774373443216" duration="19000" />
       <workItem from="1774382903642" duration="59000" />
       <workItem from="1774382964592" duration="2434000" />
-      <workItem from="1774388308189" duration="3066000" />
+      <workItem from="1774388308189" duration="4056000" />
     </task>
     <servers />
   </component>

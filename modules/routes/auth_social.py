@@ -53,7 +53,7 @@ def login_google():
     return oauth.google.authorize_redirect(get_google_redirect_uri(current_app))
 
 
-@auth_social.route('/auth/google/callback')
+@auth_social.route('/google/callback')
 def google_callback():
     """
     Handle Google OAuth callback and log the user in.
