@@ -4,14 +4,12 @@ import qrcode
 import io
 import base64
 from functools import wraps
-import secrets
 import os
 import hashlib
 import ipaddress
 from cryptography.fernet import Fernet
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import json
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
