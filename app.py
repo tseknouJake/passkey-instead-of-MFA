@@ -3,7 +3,6 @@ import pyotp
 import qrcode
 import io
 import base64
-from functools import wraps
 import os
 import ipaddress
 from dotenv import load_dotenv
@@ -11,7 +10,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from modules.utils.encryptor import get_flask_secret_key
 from modules.services.user_service import (
     get_user,
-    create_user,
     create_social_user,
     update_mfa_secret,
     add_passkey_credential
@@ -142,67 +140,6 @@ def normalize_local_passkey_origin():
 # ============================================
 # User Registration
 # ============================================
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    """User registration route"""
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-
-        # Validation
-        if not username or not password:
-            return render_template('register.html', error='Username and password are required')
-
-        if len(password) < 8:
-            return render_template('register.html', error='Password must be at least 8 characters')
-
-        if password != confirm_password:
-            return render_template('register.html', error='Passwords do not match')
-
-        if get_user(username):
-            return render_template('register.html', error='Username already exists')
-
-        # Create new user
-        create_user(username, password)
-
-        # Auto-login after registration
-        session['username'] = username
-        session['registered'] = True
-        return redirect(url_for('setup_choice'))
-
-    return render_template('register.html')
-
-@app.route('/setup-choice')
-def setup_choice():
-    """Choose authentication method after registration"""
-    if 'username' not in session:
-        return redirect(url_for('main.index'))
-    return render_template('setup_choice.html', username=session['username'])
-
-# ============================================
-# MFA Authentication Routes
-# ============================================
-
-@app.route('/login', methods=['GET', 'POST'])
-def password_login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        user = get_user(username)
-        if user and user.get('password') == password:
-            session['username'] = username
-            session['auth_method'] = 'classic'
-            session['classic_verified'] = True
-            session['mfa_verified'] = False
-            session['passkey_verified'] = False
-            session['social_verified'] = False
-            return redirect(url_for('main.dashboard'))
-        return render_template('login.html', error='Invalid credentials')
-
-    return render_template('login.html')
 
 @app.route('/mfa-login', methods=['GET', 'POST'])
 def mfa_login():

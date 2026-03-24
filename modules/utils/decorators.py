@@ -41,7 +41,7 @@ def login_required(f): #TODO: refactor nested function
             return redirect(url_for('main.index'))
 
         elif auth_method == 'classic' and not session.get('classic_verified'):
-            return redirect(url_for('password_login'))
+            return redirect(url_for('auth_classic.password_login'))
 
         return f(*args, **kwargs)
     return decorated_function
