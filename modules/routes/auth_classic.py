@@ -60,7 +60,6 @@ def setup_choice():
         return redirect(url_for('main.index'))
     return render_template('setup_choice.html', username=session['username'])
 
-#TODO: rename to just login maybe? because when it is used, it is called under "auth_classic" anyway
 @auth_classic.route('/login', methods=['GET', 'POST'])
 def password_login():
     """

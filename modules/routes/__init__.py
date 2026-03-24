@@ -17,6 +17,7 @@ def register_routes(app):
     Args:
         app (Flask): The Flask application instance.
     """
+    # TODO: extract routes URLs to be reusable across all backend and frontend channels
     app.register_blueprint(main)
     app.register_blueprint(auth_classic)
     app.register_blueprint(auth_otp)

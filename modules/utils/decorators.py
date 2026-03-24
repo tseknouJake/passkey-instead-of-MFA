@@ -4,7 +4,7 @@ Custom decorators used across the application.
 This module contains reusable decorators for handling
 authentication and access control.
 """
-#TODO: make a class maybe?
+#TODO: make a class maybe? need to look into, might be a bad suggestion
 
 from functools import wraps
 from flask import session, redirect, url_for

@@ -8,6 +8,7 @@ Handles:
 """
 
 #TODO: use just OTP without MFA (for consistency, according to the feedback from examiners at proposal discussion)
+# can be done at a later stage - not necessary for the prototype
 
 from flask import Blueprint, render_template, request, redirect, url_for, session
 import pyotp

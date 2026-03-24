@@ -8,6 +8,7 @@ Handles:
 """
 
 #TODO: doesn't work in deployment (nor on a foreign host, where env variables don't match localy)
+# @Ira
 
 from flask import Blueprint, render_template, redirect, session, url_for
 from modules.services.user_service import get_user, create_social_user
