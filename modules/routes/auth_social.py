@@ -8,7 +8,9 @@ Handles:
 """
 
 #TODO: doesn't work in deployment (nor on a foreign host, where env variables don't match localy)
-# @Ira
+#TODO: add set up route to link to an existing account
+#TODO: require entering a password, when loging in for the first time, in order to save as an account that can be used with other routes
+# @Irina
 
 from flask import Blueprint, render_template, redirect, session, url_for
 from modules.services.user_service import get_user, create_social_user

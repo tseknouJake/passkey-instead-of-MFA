@@ -46,8 +46,9 @@ def create_user(username: str, password: str) -> None:
         "password": encrypted_password
     }).execute()
 
-
-def create_social_user(username: str, provider: str) -> None: #TODO: remove and use create user instead
+#TODO: remove and use "create_user" instead (require entering a password at first login)
+# @Irina
+def create_social_user(username: str, provider: str) -> None:
     """
     Create a user registered via a social provider.
 
