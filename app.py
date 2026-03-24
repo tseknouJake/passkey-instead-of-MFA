@@ -16,6 +16,7 @@ from modules.services.user_service import (
     update_mfa_secret,
     add_passkey_credential
 )
+from modules.utils.decorators import login_required
 
 load_dotenv()
 try:
@@ -111,23 +112,6 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = env_flag("SESSION_COOKIE_SECURE")
 app.config["PREFERRED_URL_SCHEME"] = "https" if env_flag("PREFERRED_URL_SCHEME_HTTPS") else "http"
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('index'))
-        auth_method = session.get('auth_method')
-        if auth_method == 'mfa' and not session.get('mfa_verified'):
-            return redirect(url_for('mfa_login'))
-        elif auth_method == 'passkey' and not session.get('passkey_verified'):
-            return redirect(url_for('passkey_login'))
-        elif auth_method == 'social' and not session.get('social_verified'):
-            return redirect(url_for('index'))
-        elif auth_method == 'classic' and not session.get('classic_verified'):
-            return redirect(url_for('password_login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @app.route('/')
 def index():
