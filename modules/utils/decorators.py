@@ -35,7 +35,7 @@ def login_required(f): #TODO: refactor nested function
             return redirect(url_for('auth_otp.mfa_login'))
 
         elif auth_method == 'passkey' and not session.get('passkey_verified'):
-            return redirect(url_for('passkey_login'))
+            return redirect(url_for('auth_passkey.passkey_login'))
 
         elif auth_method == 'social' and not session.get('social_verified'):
             return redirect(url_for('main.index'))

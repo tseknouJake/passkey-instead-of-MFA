@@ -7,6 +7,7 @@ Registers all blueprints to the Flask app.
 from .main import main
 from .auth_classic import auth_classic
 from .auth_otp import auth_otp
+from .auth_passkey import auth_passkey
 
 def register_routes(app):
     """
@@ -18,3 +19,4 @@ def register_routes(app):
     app.register_blueprint(main)
     app.register_blueprint(auth_classic)
     app.register_blueprint(auth_otp)
+    app.register_blueprint(auth_passkey)

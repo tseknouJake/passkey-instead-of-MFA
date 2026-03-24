@@ -128,11 +128,11 @@
                 <a href="{{ url_for('auth_otp.mfa_login') }}" class="btn">Login with MFA</a>
             </div>
 
-            <div class="auth-card passkey" data-url="{{ url_for('passkey_login') }}">
+            <div class="auth-card passkey" data-url="{{ url_for('auth_passkey.passkey_login') }}">
                 <div class="auth-icon">🔑</div>
                 <h2>Passkey Login</h2>
                 <p>Passwordless with Biometrics</p>
-                <a href="{{ url_for('passkey_login') }}" class="btn">Login with Passkey</a>
+                <a href="{{ url_for('auth_passkey.passkey_login') }}" class="btn">Login with Passkey</a>
             </div>
 
             <div class="auth-card google" data-url="{{ url_for('google_login_page') }}">
