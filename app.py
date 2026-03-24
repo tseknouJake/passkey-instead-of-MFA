@@ -5,12 +5,11 @@ import io
 import base64
 from functools import wraps
 import os
-import hashlib
 import ipaddress
-from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
 from modules.database import supabase
+from modules.utils.encryptor import encrypt_data, decrypt_data, get_flask_secret_key
 
 load_dotenv()
 try:
@@ -63,26 +62,6 @@ if oauth and not get_google_oauth_error():
         client_kwargs={"scope": "openid email profile"},
     )
 
-# ============================================
-# Encryption Functions
-
-FERNET_KEY = os.environ.get("FERNET_KEY")
-
-if not FERNET_KEY:
-    raise ValueError("FERNET_KEY environment variable not set")
-
-f = Fernet(FERNET_KEY.encode())
-
-
-def get_flask_secret_key():
-    configured_secret = (os.environ.get("SECRET_KEY") or "").strip()
-    if configured_secret:
-        return configured_secret
-
-    # Keep session signing stable across Gunicorn workers when SECRET_KEY is not set.
-    return hashlib.sha256(FERNET_KEY.encode()).hexdigest()
-
-
 def env_flag(name, default=False):
     value = os.environ.get(name)
     if value is None:
@@ -126,12 +105,6 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = env_flag("SESSION_COOKIE_SECURE")
 app.config["PREFERRED_URL_SCHEME"] = "https" if env_flag("PREFERRED_URL_SCHEME_HTTPS") else "http"
-
-def encrypt_data(data):
-    return f.encrypt(data.encode()).decode()
-
-def decrypt_data(encrypted_data):
-    return f.decrypt(encrypted_data.encode()).decode()
 
 def get_user(username):
     response = supabase.table("users").select("*").eq("username", username).execute()
