@@ -27,7 +27,7 @@ def login_required(f): #TODO: refactor nested function
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'username' not in session:
-            return redirect(url_for('index'))
+            return redirect(url_for('main.index'))
 
         auth_method = session.get('auth_method')
 
@@ -38,7 +38,7 @@ def login_required(f): #TODO: refactor nested function
             return redirect(url_for('passkey_login'))
 
         elif auth_method == 'social' and not session.get('social_verified'):
-            return redirect(url_for('index'))
+            return redirect(url_for('main.index'))
 
         elif auth_method == 'classic' and not session.get('classic_verified'):
             return redirect(url_for('password_login'))

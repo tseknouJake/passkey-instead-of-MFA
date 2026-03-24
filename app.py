@@ -16,7 +16,9 @@ from modules.services.user_service import (
     update_mfa_secret,
     add_passkey_credential
 )
-from modules.utils.decorators import login_required
+from modules.routes import register_routes
+
+#TODO: extract routes URLs to be reusable
 
 load_dotenv()
 try:
@@ -27,6 +29,7 @@ except ModuleNotFoundError:
     GOOGLE_OAUTH_AVAILABLE = False
 
 app = Flask(__name__)
+register_routes(app)
 app.config["GOOGLE_CLIENT_ID"] = (os.environ.get("GOOGLE_CLIENT_ID") or "").strip()
 app.config["GOOGLE_CLIENT_SECRET"] = (os.environ.get("GOOGLE_CLIENT_SECRET") or "").strip()
 app.config["GOOGLE_REDIRECT_URI"] = (os.environ.get("GOOGLE_REDIRECT_URI") or "").strip()
@@ -113,17 +116,6 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = env_flag("SESSION_COOKIE_SECURE")
 app.config["PREFERRED_URL_SCHEME"] = "https" if env_flag("PREFERRED_URL_SCHEME_HTTPS") else "http"
 
-@app.route('/')
-def index():
-    if 'username' in session and (
-        session.get('mfa_verified') or
-        session.get('passkey_verified') or
-        session.get('classic_verified') or
-        session.get('social_verified')
-    ):
-        return redirect(url_for('dashboard'))
-    return render_template('index.html')
-
 
 @app.before_request
 def normalize_local_passkey_origin():
@@ -186,7 +178,7 @@ def register():
 def setup_choice():
     """Choose authentication method after registration"""
     if 'username' not in session:
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
     return render_template('setup_choice.html', username=session['username'])
 
 # ============================================
@@ -207,7 +199,7 @@ def password_login():
             session['mfa_verified'] = False
             session['passkey_verified'] = False
             session['social_verified'] = False
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('main.dashboard'))
         return render_template('login.html', error='Invalid credentials')
 
     return render_template('login.html')
@@ -279,7 +271,7 @@ def verify_mfa():
             session['mfa_verified'] = True
             session['classic_verified'] = False
             session['social_verified'] = False
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('main.dashboard'))
         else:
             return render_template('verify_mfa.html', error='Invalid MFA code')
 
@@ -411,23 +403,6 @@ def passkey_login_verify():
 
     return jsonify({'success': True})
 
-# ============================================
-# Dashboard & Logout
-# ============================================
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    auth_method = session.get('auth_method')
-    return render_template('dashboard.html', 
-                         username=session['username'],
-                         auth_method=auth_method)
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('index'))
-
 @app.route('/google-login-page')
 def google_login_page():
     oauth_error = get_google_oauth_error()
@@ -486,7 +461,7 @@ def google_callback():
     session['mfa_verified'] = False
     session['passkey_verified'] = False
 
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('main.dashboard'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
