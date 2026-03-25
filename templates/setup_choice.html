@@ -86,7 +86,16 @@
                 <p>Use your fingerprint or Face ID for passwordless login</p>
                 <a href="{{ url_for('auth_passkey.passkey_register') }}" class="btn">Register Passkey</a>
             </div>
+
+            <div class="auth-card google" data-url="{{ url_for('auth_social.login_google') }}">
+                <div class="auth-icon">📨</div>
+                <h2>Link Google</h2>
+                <p>Use your Google account for quick and secure access</p>
+                <a href="{{ url_for('auth_social.login_google') }}" class="btn">Link Google</a>
+
+            </div>
         </div>
+
 
         <div class="skip-link">
             <a href="{{ url_for('main.logout') }}">Skip for now, I'll set this up later</a>

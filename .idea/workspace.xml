@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="85e6c5b4-ffef-4e58-9010-2e463a176b54" name="Changes" comment="" />
+    <list default="true" id="85e6c5b4-ffef-4e58-9010-2e463a176b54" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/routes/auth_social.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/routes/auth_social.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/services/user_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/services/user_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/setup_choice.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/setup_choice.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -146,7 +151,10 @@
       <workItem from="1774373443216" duration="19000" />
       <workItem from="1774382903642" duration="59000" />
       <workItem from="1774382964592" duration="2434000" />
-      <workItem from="1774388308189" duration="4689000" />
+      <workItem from="1774388308189" duration="5456000" />
+      <workItem from="1774394033866" duration="144000" />
+      <workItem from="1774395418032" duration="87000" />
+      <workItem from="1774449980072" duration="693000" />
     </task>
     <servers />
   </component>
@@ -158,7 +166,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/refactoring" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>

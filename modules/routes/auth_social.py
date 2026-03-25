@@ -7,13 +7,8 @@ Handles:
 - Handling OAuth callback
 """
 
-#TODO: doesn't work in deployment (nor on a foreign host, where env variables don't match localy)
-#TODO: add set up route to link to an existing account
-#TODO: require entering a password, when loging in for the first time, in order to save as an account that can be used with other routes
-# @Irina
-
 from flask import Blueprint, render_template, redirect, session, url_for, request
-from modules.services.user_service import get_user, create_user  # , create_social_user
+from modules.services.user_service import get_user, create_user
 from modules.utils.oauth import get_google_oauth, get_google_oauth_error, get_google_redirect_uri
 from flask import current_app
 
