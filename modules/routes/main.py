@@ -5,7 +5,7 @@ Handles general navigation such as landing page,
 dashboard, and logout.
 """
 
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for, send_from_directory
 from modules.utils.decorators import login_required
 
 main = Blueprint('main', __name__)
@@ -44,6 +44,15 @@ def dashboard():
         username=username,
         auth_method=auth_method
     )
+
+
+@main.route('/questionnaire')
+def questionnaire():
+    return send_from_directory('questionnaire', 'index.html')
+
+@main.route('/questionnaire/<path:filename>')
+def questionnaire_static(filename):
+    return send_from_directory('questionnaire', filename)
 
 
 @main.route('/logout')

@@ -77,7 +77,7 @@ def password_login():
             session['mfa_verified'] = False
             session['passkey_verified'] = False
             session['social_verified'] = False
-            return redirect(url_for('main.dashboard'))
+            return redirect('/questionnaire')
 
         return render_template('login.html', error='Invalid credentials')
 

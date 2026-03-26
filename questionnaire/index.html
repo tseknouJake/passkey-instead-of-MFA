@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auth-Questionnaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/questionnaire/styles.css">
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-eyebrow">GROUP 10 · TOPIC 2: AUTHENTICATION</div>
+  <div class="home-title">AUTH<span>-</span>QUESTIONNAIRE</div>
+  <div class="home-sub">
+    Learn how authentication methods get attacked.
+    Experience it yourself.
+    Navigate through real attack simulations and find out if you'd fall for them.
+  </div>
+
+  <div class="home-path">
+    <div class="path-step" onclick="goToLevels()">
+      <span class="ps-num" style="color:var(--cyan)">01</span>
+      <span class="ps-label">Knowledge</span>
+      <span class="ps-arrow">›</span>
+    </div>
+    <div class="path-step" onclick="goToLevels()">
+      <span class="ps-num" style="color:var(--yellow)">02</span>
+      <span class="ps-label">Multi-Factor</span>
+      <span class="ps-arrow">›</span>
+    </div>
+    <div class="path-step" onclick="goToLevels()">
+      <span class="ps-num" style="color:var(--green)">03</span>
+      <span class="ps-label">Passwordless</span>
+    </div>
+  </div>
+
+  <button class="btn-start" onclick="goToLevels()">START TRAINING →</button>
+</div>
+
+<!--LEVEL SELECT-->
+<div class="screen" id="screen-levels">
+  <div class="level-header">
+    <h1>CHOOSE A LEVEL</h1>
+    <button class="back-btn" onclick="show('home')">← BACK</button>
+  </div>
+  <div class="levels-grid">
+
+    <div class="level-card lv1" onclick="startLevel(0)">
+      <div class="lv-num">Level 01 — Knowledge-Based</div>
+      <div class="lv-title">Passwords & PINs</div>
+      <div class="lv-desc">See how password-based login works and how it can be attacked.</div>
+      <div class="methods-list">
+        <span class="method-tag">Password</span>
+        <span class="method-tag">PIN</span>
+        <span class="method-tag">Security Q</span>
+      </div>
+      <div class="lv-score" id="score-lv0">
+        <span class="dot dot-skip"></span> Not started
+      </div>
+    </div>
+
+    <div class="level-card lv2" onclick="startLevel(1)">
+      <div class="lv-num">Level 02 — Multi-Factor</div>
+      <div class="lv-title">Password + OTP</div>
+      <div class="lv-desc">See how adding a one-time code improves security, and where it doesn't.</div>
+      <div class="methods-list">
+        <span class="method-tag">TOTP</span>
+        <span class="method-tag">SMS OTP</span>
+        <span class="method-tag">App OTP</span>
+      </div>
+      <div class="lv-score" id="score-lv1">
+        <span class="dot dot-skip"></span> Not started
+      </div>
+    </div>
+
+    <div class="level-card lv4" onclick="startLevel(2)">
+      <div class="lv-num">Level 03 — Passwordless</div>
+      <div class="lv-title">Passkeys & Biometrics</div>
+      <div class="lv-desc">See how passkeys work and why they are harder to attack than passwords.</div>
+      <div class="methods-list">
+        <span class="method-tag">Passkey</span>
+        <span class="method-tag">WebAuthn</span>
+        <span class="method-tag">Biometric</span>
+      </div>
+      <div class="lv-score" id="score-lv2">
+        <span class="dot dot-skip"></span> Not started
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!--SCENARIO-->
+<div class="screen" id="screen-scenario">
+  <div class="scenario-bar">
+    <div class="scenario-meta">LEVEL <span id="bar-level">—</span> &nbsp;·&nbsp; SCENARIO <span id="bar-step">—</span></div>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <div id="bar-dots" style="display:flex;gap:6px;"></div>
+      <button class="back-btn" onclick="show('levels')">LEVELS</button>
+    </div>
+  </div>
+  <div class="scenario-body">
+    <div class="scenario-eyebrow" id="sc-eyebrow"></div>
+    <div class="scenario-title" id="sc-title"></div>
+    <div class="scenario-context" id="sc-context"></div>
+
+    <div class="sim-window" id="sim-window">
+      <div class="sim-window-bar">
+        <div class="win-dot win-dot-r"></div>
+        <div class="win-dot win-dot-y"></div>
+        <div class="win-dot win-dot-g"></div>
+        <div class="win-url" id="win-url"></div>
+      </div>
+      <div class="sim-content" id="sim-content"></div>
+    </div>
+
+    <div class="choice-section">
+      <div class="choice-prompt" id="choice-prompt"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+
+    <div class="result-panel" id="result-panel">
+      <div class="result-verdict" id="result-verdict"></div>
+      <div class="result-explain" id="result-explain"></div>
+      <button class="next-btn" id="next-btn" onclick="submitRating()">NEXT SCENARIO →</button>
+    </div>
+
+    <div class="usability-section" id="usability-section">
+      <div class="usability-q" id="usability-q"></div>
+      <div class="rating-row">
+        <span class="rating-label">Very hard</span>
+        <button class="rating-btn" onclick="selectRating(1)">1</button>
+        <button class="rating-btn" onclick="selectRating(2)">2</button>
+        <button class="rating-btn" onclick="selectRating(3)">3</button>
+        <button class="rating-btn" onclick="selectRating(4)">4</button>
+        <button class="rating-btn" onclick="selectRating(5)">5</button>
+        <span class="rating-label">Very easy</span>
+      </div>
+      <button class="rating-submit" id="rating-submit" onclick="confirmRating()" disabled>CONFIRM →</button>
+    </div>
+  </div>
+</div>
+
+<!--RESULTS-->
+<div class="screen" id="screen-results">
+  <div class="results-title" id="final-title">TRAINING COMPLETE</div>
+  <div class="results-sub" id="final-sub"></div>
+  <div class="score-summary" id="final-score"></div>
+  <div class="score-label">SCENARIOS PASSED</div>
+  <div class="results-grid" id="results-grid"></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <button class="replay-btn" onclick="show('levels')">← TRY ANOTHER LEVEL</button>
+    <button class="replay-btn" onclick="show('home')">HOME</button>
+  </div>
+</div>
+
+<script src="/questionnaire/app.js"></script>
+</body>
+</html>
