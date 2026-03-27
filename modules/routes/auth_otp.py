@@ -15,7 +15,7 @@ import pyotp
 import qrcode
 import io
 import base64
-from modules.services.user_service import get_user, update_mfa_secret
+from modules.services.user_service import get_user, update_mfa_secret, verify_user_password
 
 auth_otp = Blueprint('auth_otp', __name__, url_prefix='/auth')
 
@@ -30,7 +30,7 @@ def mfa_login():
         password = request.form.get('password')
 
         user = get_user(username)
-        if user and user.get('password') == password:
+        if verify_user_password(user, password):
             session['username'] = username
             session['auth_method'] = 'mfa'
             session['mfa_verified'] = False
