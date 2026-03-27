@@ -4,85 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Passkey</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 500px;
-        }
-        .back-btn {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-            margin-bottom: 20px;
-            display: inline-block;
-        }
-        h1 { text-align: center; color: #333; margin-bottom: 10px; }
-        .method-badge {
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-            text-align: center;
-            padding: 8px;
-            border-radius: 5px;
-            margin-bottom: 30px;
-            font-weight: 600;
-            color: #333;
-        }
-        .steps {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        .steps h3 { color: #333; margin-bottom: 15px; }
-        .steps ol { margin-left: 20px; }
-        .steps li { margin: 10px 0; color: #555; line-height: 1.6; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #555; font-weight: 500; }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        input:focus { outline: none; border-color: #a1c4fd; }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-            color: #333;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover { transform: translateY(-2px); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
-        .error { background: #fee; color: #c33; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; }
-        .success { background: #efe; color: #282; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; }
-        .info { text-align: center; margin-top: 15px; color: #666; font-size: 14px; }
-        #registerSection { display: none; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/passkey_register.css') }}">
 </head>
 <body>
     <div class="container">
         <a href="{{ url_for('main.index') }}" class="back-btn">← Back</a>
-        <h1>🔑 Register Passkey</h1>
+        <h1>Register Passkey</h1>
         <div class="method-badge">Passwordless Setup</div>
         <div id="message"></div>
         <div id="credentialsSection">
@@ -110,98 +37,14 @@
         </div>
         <div id="registerSection">
             <div class="steps">
-                <h3>✅ Verified!</h3>
+                <h3>Verified!</h3>
                 <p style="margin-top:10px;color:#555">Register your passkey with biometric authentication.</p>
             </div>
-            <button id="registerBtn" onclick="registerPasskey()">🔑 Register Passkey</button>
+            <button id="registerBtn" onclick="registerPasskey()">Register Passkey</button>
         </div>
     </div>
     {% if username %}
-    <script>
-        document.getElementById('credentialsSection').style.display = 'none';
-        document.getElementById('registerSection').style.display = 'block';
-
-        async function registerPasskey() {
-            const btn = document.getElementById('registerBtn');
-            const msg = document.getElementById('message');
-
-            try {
-                btn.disabled = true;
-                btn.textContent = '🔄 Registering...';
-
-                const res = await fetch('/api/passkey/register-options', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'}
-                });
-
-                if (!res.ok) {
-                    throw new Error('Failed to get registration options');
-                }
-
-                const opts = await res.json();
-                console.log('Registration options:', opts);
-
-                // Convert challenge from base64url to Uint8Array
-                opts.challenge = Uint8Array.from(
-                    atob(opts.challenge.replace(/-/g, '+').replace(/_/g, '/')), 
-                    c => c.charCodeAt(0)
-                );
-
-                // Convert user.id from base64url to Uint8Array
-                opts.user.id = Uint8Array.from(
-                    atob(opts.user.id.replace(/-/g, '+').replace(/_/g, '/')), 
-                    c => c.charCodeAt(0)
-                );
-
-                console.log('Creating credential...');
-                const cred = await navigator.credentials.create({ publicKey: opts });
-                console.log('Credential created:', cred);
-
-                // Prepare credential for server
-                const credJSON = {
-                    id: cred.id,
-                    rawId: arrayBufferToBase64(cred.rawId),
-                    type: cred.type,
-                    response: {
-                        attestationObject: arrayBufferToBase64(cred.response.attestationObject),
-                        clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON)
-                    }
-                };
-
-                console.log('Verifying with server...');
-                const verifyRes = await fetch('/api/passkey/register-verify', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(credJSON)
-                });
-
-                const result = await verifyRes.json();
-                console.log('Verification result:', result);
-
-                if (result.success) {
-                    msg.innerHTML = '<div class="success">✅ Success! Redirecting...</div>';
-                    setTimeout(() => window.location.href = '/questionnaire', 1500);
-                } else {
-                    throw new Error('Verification failed');
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                msg.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
-                btn.disabled = false;
-                btn.textContent = '🔑 Register Passkey';
-            }
-        }
-
-        function arrayBufferToBase64(buffer) {
-            const bytes = new Uint8Array(buffer);
-            let binary = '';
-            for (let i = 0; i < bytes.byteLength; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/passkey_register.js') }}"></script>
     {% endif %}
 </body>
 </html>
