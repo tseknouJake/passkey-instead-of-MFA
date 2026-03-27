@@ -80,7 +80,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="{{ url_for('index') }}" class="back-btn">← Back to options</a>
+        <a href="{{ url_for('main.index') }}" class="back-btn">← Back to options</a>
         <h1>Passkey Login</h1>
         <div class="method-badge">Passwordless Authentication</div>
 
@@ -104,7 +104,7 @@
 
         <div class="register-link">
             <p>Don't have a passkey?</p>
-            <a href="{{ url_for('passkey_register') }}">Register a new passkey →</a>
+            <a href="{{ url_for('auth_passkey.passkey_register') }}">Register a new passkey →</a>
         </div>
     </div>
 
@@ -190,7 +190,7 @@
 
                 if (result.success) {
                     messageDiv.innerHTML = '<div class="success">✅ Login successful! Redirecting...</div>';
-                    setTimeout(() => window.location.href = '/dashboard', 1000);
+                    setTimeout(() => window.location.href = '/questionnaire', 1000);
                 } else {
                     throw new Error('Authentication failed');
                 }

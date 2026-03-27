@@ -120,33 +120,33 @@
         <p class="subtitle">Choose your authentication method</p>
 
         <div class="auth-options">
-            <div class="auth-card mfa" data-url="{{ url_for('mfa_login') }}">
+            <div class="auth-card mfa" data-url="{{ url_for('auth_otp.mfa_login') }}">
                 <div class="auth-icon">📱</div>
                 <h2>MFA Login</h2>
                 <p>Multi-Factor Authentication with TOTP</p>
                 </ul>
-                <a href="{{ url_for('mfa_login') }}" class="btn">Login with MFA</a>
+                <a href="{{ url_for('auth_otp.mfa_login') }}" class="btn">Login with MFA</a>
             </div>
 
-            <div class="auth-card passkey" data-url="{{ url_for('passkey_login') }}">
+            <div class="auth-card passkey" data-url="{{ url_for('auth_passkey.passkey_login') }}">
                 <div class="auth-icon">🔑</div>
                 <h2>Passkey Login</h2>
                 <p>Passwordless with Biometrics</p>
-                <a href="{{ url_for('passkey_login') }}" class="btn">Login with Passkey</a>
+                <a href="{{ url_for('auth_passkey.passkey_login') }}" class="btn">Login with Passkey</a>
             </div>
 
-            <div class="auth-card google" data-url="{{ url_for('google_login_page') }}">
+            <div class="auth-card google" data-url="{{ url_for('auth_social.google_login_page') }}">
                 <div class="auth-icon">📨</div>
                 <h2>Google Login</h2>
                 <p>Login with your Google account</p>
-                <a href="{{ url_for('google_login_page') }}" class="btn">Login with Google</a>
+                <a href="{{ url_for('auth_social.google_login_page') }}" class="btn">Login with Google</a>
             </div>
 
-            <div class="auth-card classic" data-url="{{ url_for('password_login') }}">
+            <div class="auth-card classic" data-url="{{ url_for('auth_classic.password_login') }}">
                 <div class="auth-icon">📱</div>
                 <h2>Old fashioned password username login</h2>
                 <p>Normal login with no additional security</p>
-                <a href="{{ url_for('password_login') }}" class="btn">Login with Password</a>
+                <a href="{{ url_for('auth_classic.password_login') }}" class="btn">Login with Password</a>
             </div>
         </div>
 
@@ -193,7 +193,7 @@
         <div class="register-section">
             <h3>New User?</h3>
             <p>Create an account and try different authentication methods</p>
-            <a href="{{ url_for('register') }}" class="register-btn">Create Account</a>
+            <a href="{{ url_for('auth_classic.register') }}" class="register-btn">Create Account</a>
         </div>
     </div>
 
