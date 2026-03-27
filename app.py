@@ -8,11 +8,12 @@ import secrets
 import os
 import hashlib
 import ipaddress
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import json
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
 try:
@@ -140,19 +141,55 @@ def encrypt_data(data):
 def decrypt_data(encrypted_data):
     return f.decrypt(encrypted_data.encode()).decode()
 
+def maybe_decrypt_data(value):
+    if not value:
+        return value
+
+    try:
+        return decrypt_data(value)
+    except InvalidToken:
+        return value
+
+def is_password_hash(value):
+    return isinstance(value, str) and value.startswith(("scrypt:", "pbkdf2:"))
+
+def hash_password(password):
+    return generate_password_hash(password)
+
+def update_user_password(username, password_value):
+    supabase.table("users").update({"password": password_value}).eq("username", username).execute()
+
+def verify_user_password(user, candidate_password):
+    if not user or not candidate_password:
+        return False
+
+    stored_password = user.get("password")
+    if not stored_password:
+        return False
+
+    if is_password_hash(stored_password):
+        return check_password_hash(stored_password, candidate_password)
+
+    legacy_password = maybe_decrypt_data(stored_password)
+    if secrets.compare_digest(legacy_password, candidate_password):
+        password_hash = hash_password(candidate_password)
+        update_user_password(user["username"], password_hash)
+        user["password"] = password_hash
+        return True
+
+    return False
+
 def get_user(username):
     response = supabase.table("users").select("*").eq("username", username).execute()
     user = response.data[0] if response.data else None
     if user:
-        if user.get("password"):
-            user["password"] = decrypt_data(user["password"])
         if user.get("mfa_secret"):
-            user["mfa_secret"] = decrypt_data(user["mfa_secret"])
+            user["mfa_secret"] = maybe_decrypt_data(user["mfa_secret"])
     return user
 
 def create_user(username, password):
-    encrypted_password = encrypt_data(password)
-    supabase.table("users").insert({"username": username, "password": encrypted_password}).execute()
+    password_hash = hash_password(password)
+    supabase.table("users").insert({"username": username, "password": password_hash}).execute()
 
 def create_social_user(username, _provider):
     supabase.table("users").insert({
@@ -274,7 +311,7 @@ def password_login():
         password = request.form.get('password')
 
         user = get_user(username)
-        if user and user.get('password') == password:
+        if verify_user_password(user, password):
             session['username'] = username
             session['auth_method'] = 'classic'
             session['classic_verified'] = True
@@ -293,7 +330,7 @@ def mfa_login():
         password = request.form.get('password')
 
         user = get_user(username)
-        if user and user['password'] == password:
+        if verify_user_password(user, password):
             session['username'] = username
             session['auth_method'] = 'mfa'
             session['mfa_verified'] = False
@@ -374,7 +411,7 @@ def passkey_register():
         password = request.form.get('password')
 
         user = get_user(username)
-        if user and user['password'] == password:
+        if verify_user_password(user, password):
             session['username'] = username
             session['auth_method'] = 'passkey'
             session['passkey_verified'] = False
