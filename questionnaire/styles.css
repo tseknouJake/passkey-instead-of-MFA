@@ -158,6 +158,22 @@ body::before {
   transform:scale(1.02); 
 }
 
+.logout-btn {
+  border: 1px solid #ff3355;
+  color: #ff3355;
+  padding: 6px 16px;
+  text-decoration: none;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #ff3355;
+  color: #09090f;
+}
+
 /*LEVEL SELECT*/
 #screen-levels { 
   padding:32px; 
