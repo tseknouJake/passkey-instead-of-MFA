@@ -7,7 +7,7 @@ Handles:
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, session
-from modules.services.user_service import get_user, create_user
+from modules.services.user_service import get_user, create_user, verify_user_password
 from modules.utils.decorators import login_required
 
 auth_classic = Blueprint('auth_classic', __name__, url_prefix='/auth')
@@ -70,7 +70,7 @@ def password_login():
         password = request.form.get('password')
 
         user = get_user(username)
-        if user and user.get('password') == password:
+        if verify_user_password(user, password):
             session['username'] = username
             session['auth_method'] = 'classic'
             session['classic_verified'] = True
