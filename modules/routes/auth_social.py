@@ -10,6 +10,7 @@ Handles:
 from flask import Blueprint, render_template, redirect, session, url_for, request
 from modules.services.user_service import get_user, create_user
 from modules.utils.oauth import get_google_oauth, get_google_oauth_error, get_google_redirect_uri
+from modules.routes.auth_classic import create_user_session
 from flask import current_app
 
 auth_social = Blueprint('auth_social', __name__, url_prefix='/auth')
@@ -76,7 +77,8 @@ def google_callback():
 
     user_info = token.get('userinfo')
     if not user_info:
-        user_info = oauth.google.parse_id_token(token, nonce=session.get('oauth_nonce'))
+        user_info = oauth.google.parse_id_token(
+            token, nonce=session.get('oauth_nonce'))
 
     email = user_info['email']
 
@@ -85,13 +87,8 @@ def google_callback():
         session['pending_social_provider'] = 'google'
         return redirect(url_for('auth_social.set_up_password'))
 
-    session['username'] = email
-    session['auth_method'] = 'social'
+    create_user_session(email, auth_method='social')
     session['social_verified'] = True
-    session['classic_verified'] = False
-    session['mfa_verified'] = False
-    session['passkey_verified'] = False
-
     return redirect('/questionnaire')
 
 
@@ -116,11 +113,7 @@ def set_up_password():
         session.pop('pending_social_provider')
 
         create_user(email, password)
-        session['username'] = email
-        session['auth_method'] = 'social'
+        create_user_session(email, auth_method='social')
         session['social_verified'] = True
-        session['classic_verified'] = False
-        session['mfa_verified'] = False
-        session['passkey_verified'] = False
         return redirect('/questionnaire')
     return render_template('register.html', error='', username=email, username_readonly=True)

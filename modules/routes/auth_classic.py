@@ -28,10 +28,10 @@ def validate_registration(username, password, confirm_password):
     return None
 
 
-def create_user_session(username):
+def create_user_session(username, auth_method='classic'):
     session['username'] = username
-    session['auth_method'] = 'classic'
-    session['classic_verified'] = True
+    session['auth_method'] = auth_method
+    session['classic_verified'] = auth_method == 'classic'
     session['mfa_verified'] = False
     session['passkey_verified'] = False
     session['social_verified'] = False
@@ -42,7 +42,7 @@ def register():
     """
     User registration route.
     """
-    # TODO: refactor into multiple functions
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
