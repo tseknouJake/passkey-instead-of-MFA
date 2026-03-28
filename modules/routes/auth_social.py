@@ -92,7 +92,7 @@ def google_callback():
     session['mfa_verified'] = False
     session['passkey_verified'] = False
 
-    return redirect(url_for('main.dashboard'))
+    return redirect('/questionnaire')
 
 
 @auth_social.route('/social/set-up-password', methods=['GET', 'POST'])
@@ -122,5 +122,5 @@ def set_up_password():
         session['classic_verified'] = False
         session['mfa_verified'] = False
         session['passkey_verified'] = False
-        return redirect(url_for('main.dashboard'))
+        return redirect('/questionnaire')
     return render_template('register.html', error='', username=email, username_readonly=True)

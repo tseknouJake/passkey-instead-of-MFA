@@ -11,7 +11,7 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 import os
 import base64
 
-from modules.services.user_service import get_user, add_passkey_credential
+from modules.services.user_service import get_user, add_passkey_credential, verify_user_password
 from modules.utils.passkey_helpers import normalize_passkey_host, get_passkey_rp_id
 
 auth_passkey = Blueprint('auth_passkey', __name__)
@@ -77,7 +77,7 @@ def passkey_register():
         password = request.form.get('password')
 
         user = get_user(username)
-        if user and user.get('password') == password:
+        if verify_user_password(user, password):
             session['username'] = username
             session['auth_method'] = 'passkey'
             session['passkey_verified'] = False
