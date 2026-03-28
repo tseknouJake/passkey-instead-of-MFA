@@ -4,15 +4,15 @@ Custom decorators used across the application.
 This module contains reusable decorators for handling
 authentication and access control.
 """
-#TODO: make a class maybe? need to look into, might be a bad suggestion
 
-#TODO: @Enna add a time measuring feature that will be reused in all the routes and will log all the data in some
+# TODO: @Enna add a time measuring feature that will be reused in all the routes and will log all the data in some
 # kind of log file (can be txt for now)
 
 from functools import wraps
 from flask import session, redirect, url_for
 
-def login_required(f): #TODO: refactor nested function
+
+def login_required(f):
     """
     Ensure that a user is authenticated before accessing a route.
 

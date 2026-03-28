@@ -124,7 +124,6 @@ def passkey_register_options():
             'id': rp_id
         },
         'user': {
-            # TODO: don't we have a decrypt function for this?
             'id': base64.urlsafe_b64encode(username.encode()).decode().rstrip('='),
             'name': username,
             'displayName': username
@@ -198,8 +197,7 @@ def passkey_login_options():
 
     rp_id = get_passkey_rp_id()
 
-    challenge = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip(
-        '=')  # TODO: same as before - decryption?
+    challenge = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip('=')
     session['passkey_challenge'] = challenge
     session['username'] = username
 
