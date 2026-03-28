@@ -1,30 +1,10 @@
-# MFA vs Passkey Authentication Comparison
+# Authentication comparison
 
-A Flask web application comparing two authentication methods:
+A Flask web application comparing several authentication methods:
 - **MFA (Multi-Factor Authentication)**: Traditional password + TOTP codes
 - **Passkey**: Modern passwordless authentication with biometrics
-
-## ✨ Features
-
-### 📱 MFA Path
-- Username + Password
-- Authenticator app setup (Google Authenticator, Authy, etc.)
-- Time-based 6-digit codes (TOTP)
-- Works on any device
-- ~10 second login time
-
-### 🔑 Passkey Path
-- **Passwordless** - No password needed!
-- **Biometric** - Touch ID, Face ID, Windows Hello
-- **Faster** - Login in ~2 seconds
-- **More Secure** - Phishing-resistant, keys never leave device
-- Device-bound authentication
-
-### 🆕 New Features
-- **User Registration** - Create your own accounts
-- **Encrypted Storage** - Passwords and MFA secrets encrypted with Fernet
-- **Dynamic Auth Choice** - Choose MFA or Passkey after registration
-- **Persistent Data** - Credentials saved across server restarts
+- **Social login**: Single Sign-On with Google account
+- **Classic authentication**: Traditional username and password
 
 ## Requirements
 
@@ -48,26 +28,52 @@ Dependencies installed:
 - `qrcode` - QR code generation for MFA
 - `pyOpenSSL` - SSL/TLS for HTTPS
 - `cryptography` - Fernet encryption for data at rest
+- `gunicorn` - python web app deployment
+- `subabase` - PostgreSQL
+- `python-dotenv` - reading `.env` file
+- `AuthLib` - OAuth for social login
+- `requests` - allows GET and POST
 
 ## Running the App
 
+For a successful experience, you need the following environment variables:
+```
+FERNET_KEY=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=
+SUPABASE_KEY=
+SUPABASE_URL=
+```
+- If you don't have the environment variables, you can check the deployed version: https://project2-2-group10-2026.onrender.com
+
+- If you have acquired them, you can run the app with the command:
 ```bash
 python3 app.py
 ```
 
-The app will start on **https://localhost:5001** (HTTPS required for passkeys)
+The app will start on **https://localhost:5001**
+AND **https://127.0.0.1:5001**
+AND **https://192.168.1.150:5001**
 
-On first run, the app will automatically:
-- Generate an encryption key (`encryption.key`)
-- Create an empty encrypted database (`users.json`)
+ Your browser will warn about the self-signed certificate. Click "Advanced" → "Proceed to localhost" (safe for local development)
 
-⚠️ Your browser will warn about the self-signed certificate. Click "Advanced" → "Proceed to localhost" (safe for local development)
+The app can also be run with the command
+```bash
+gunicorn app:app
+```
+
+Then the app will start on **http://127.0.0.1:8000**
+
+⚠️ **Currently, all the features can be accessed on any of those ports, except for social login, which will be set up 
+later. To access the full functionality set, see the deployed version: https://project2-2-group10-2026.onrender.com**
+
 
 ## Usage
 
 ### Register a New Account
 
-1. Go to https://localhost:5001
+1. Go to https://project2-2-group10-2026.onrender.com (OR any of the locally running hosts)
 2. Click **"Create Account"** button at the bottom
 3. Enter username and password (minimum 8 characters)
 4. Confirm password
@@ -75,6 +81,7 @@ On first run, the app will automatically:
 6. Choose authentication method:
    - **Setup MFA** - Scan QR code with authenticator app
    - **Register Passkey** - Use Touch ID/biometric
+   - **Link Google** - Choose a Google account
    - **Skip for now** - Set up later
 
 ### Login with MFA
@@ -83,7 +90,7 @@ On first run, the app will automatically:
 2. Enter username and password
 3. If first time: Scan QR code with authenticator app (Google Authenticator, Authy, Microsoft Authenticator)
 4. Enter the 6-digit code from your app
-5. Access dashboard
+5. Access questionnaire
 
 ### Login with Passkey
 
@@ -91,20 +98,14 @@ On first run, the app will automatically:
 2. Enter username
 3. If first time: Click "Register a new passkey", enter password, use Touch ID
 4. If already registered: Just use Touch ID
-5. Access dashboard in ~2 seconds!
+5. Access questionnaire
 
-## Feature Comparison
-
-| Feature | MFA | Passkey |
-|---------|-----|---------|
-| Passwordless | ❌ | ✅ |
-| Biometric | ❌ | ✅ |
-| Phishing-Resistant | Partial | ✅ |
-| Setup Time | ~30 seconds | ~10 seconds |
-| Login Speed | ~10 seconds | ~2 seconds |
-| App Required | ✅ (Authenticator) | ❌ |
-| Works Offline | ❌ (needs time sync) | ✅ |
-| Device-Bound | ❌ | ✅ |
+### Login with Socials
+1. Click "Login with Google"
+2. Click "Continue with Google"
+3. Select your Google account
+4. If first time: set up a password
+5. Access questionnaire
 
 ## How It Works
 
@@ -123,154 +124,135 @@ On first run, the app will automatically:
 - Biometric verification proves you own the device
 - Domain-bound (phishing-resistant)
 
-### Encryption
-- **Fernet symmetric encryption** (AES-128 in CBC mode)
-- Passwords encrypted at rest
-- MFA secrets encrypted at rest
-- Encryption key stored in `encryption.key`
-- Transparent encryption/decryption
+### Social Login (AuthLib - Google)
+- Uses **Authlib** to implement the secure OAuth 2.0 authorization code flow
+- Users authenticate via external identity providers (e.g., Google) entirely on the provider's secure platform
+- Eliminates the need to handle or store passwords and MFA secrets for these accounts locally
+- Accounts are automatically provisioned or linked locally upon the first successful sign-in
+
+### Storage & Cryptography
+- **Password Hashing**: Passwords are one-way hashed using Werkzeug's built-in secure hashing (e.g., PBKDF2/scrypt) and are **never** stored in plaintext or reversibly encrypted.
+- **Symmetric Encryption (Fernet)**: Used to securely encrypt sensitive data at rest, such as MFA secrets (AES-128 in CBC mode).
+- The symmetric encryption key is securely generated and stored in `.env`.
+- The application handles transparent encryption/decryption of these MFA secrets during the authentication flow.
 
 ## Project Structure
 
 ```
-passkey-instead-of-mfa/
-├── app.py                      # Flask backend with all routes
+passkey-instead-of-MFA/
+├── .env                        # Environment variables (not tracked by git)
+├── .gitignore                  # Git ignore rules
+├── app.py                      # Main application entry point
+├── config.py                   # Application configuration settings
+├── package.json                # Node dependencies
+├── package-lock.json           # Node dependencies lockfile
+├── README.md                   # Project documentation
 ├── requirements.txt            # Python dependencies
-├── README.md                   # This file
-├── encryption.key              # Fernet encryption key (auto-generated)
-├── users.json                  # Encrypted user database
-└── templates/
+├── modules/                    # Application logic
+│   ├── database.py             # Database models and connection setup
+│   ├── routes/                 # Flask blueprint route definitions
+│   │   ├── __init__.py         # Route blueprints initialization
+│   │   ├── auth_classic.py     # Traditional username/password routes
+│   │   ├── auth_otp.py         # MFA/OTP authentication routes
+│   │   ├── auth_passkey.py     # WebAuthn/Passkey routes
+│   │   ├── auth_social.py      # OAuth/Social login routes
+│   │   └── main.py             # Core application routes (e.g., dashboard)
+│   ├── services/               # Business logic
+│   │   └── user_service.py     # User data management and retrieval
+│   └── utils/                  # Helper utilities
+│       ├── decorators.py       # Authentication requirement decorators
+│       ├── encryptor.py        # Fernet encryption/decryption functions
+│       ├── oauth.py            # OAuth integration helpers
+│       └── passkey_helpers.py  # WebAuthn credential processing helpers
+├── questionnaire/              # Frontend interactive components
+│   ├── app.js                  
+│   ├── index.html              
+│   └── styles.css              
+├── static/                     # Public static assets
+│   ├── css/                    # Stylesheets for each page
+│   │   ├── dashboard.css
+│   │   ├── google_login.css
+│   │   ├── login.css
+│   │   ├── mfa_login.css
+│   │   ├── passkey_login.css
+│   │   ├── passkey_register.css
+│   │   ├── register.css
+│   │   ├── setup_choice.css
+│   │   ├── setup_mfa.css
+│   │   ├── style.css
+│   │   └── verify_mfa.css
+│   └── js/                     # Frontend interactivity JavaScript
+│       ├── app.js
+│       ├── passkey_login.js
+│       ├── passkey_register.js
+│       └── setup_choice.js
+└── templates/                  # HTML templates
+    ├── dashboard.html          # Protected user dashboard
+    ├── google_login.html       # Social login interface
     ├── index.html              # Landing page with comparison
-    ├── register.html           # User registration form
-    ├── setup_choice.html       # Choose auth method
+    ├── login.html              # Basic username login
     ├── mfa_login.html          # MFA login page
-    ├── setup_mfa.html          # MFA QR code setup
-    ├── verify_mfa.html         # MFA code verification
     ├── passkey_login.html      # Passkey login page
     ├── passkey_register.html   # Passkey registration
-    └── dashboard.html          # Protected page (shows auth method)
+    ├── register.html           # User registration form
+    ├── setup_choice.html       # Setup authentication method choice
+    ├── setup_mfa.html          # MFA QR code setup
+    └── verify_mfa.html         # MFA code verification
+
 ```
-
-## File Descriptions
-
-### Core Files
-- **app.py** - Flask application with encryption, MFA, and Passkey routes
-- **encryption.key** - Fernet key for encrypting sensitive data (keep secret!)
-- **users.json** - Encrypted user database with passwords, MFA secrets, and passkey credentials
-
-### Templates
-All HTML templates use modern CSS with gradient backgrounds and responsive design.
 
 ## Security Features
 
-✅ **Encrypted Storage** - Passwords and MFA secrets encrypted with Fernet  
-✅ **HTTPS Only** - SSL/TLS for all connections  
-✅ **Session Management** - Secure Flask sessions  
-✅ **Phishing-Resistant** - Passkeys are domain-bound  
-✅ **No Password Transmission** - Passkeys use public-key cryptography  
-✅ **Biometric Verification** - Device's secure enclave  
+- **Secure Password Hashing** - Passwords are irreversibly hashed using Werkzeug's default secure hashing algorithms before being stored.
+- **Encrypted Storage** - App-specific sensitive data, like MFA setup secrets, are encrypted at rest using Fernet symmetric encryption.
+- **HTTPS Only** - SSL/TLS for all connections  
+- **Session Management** - Secure Flask sessions  
+- **Phishing-Resistant** - Passkeys are domain-bound  
+- **No Password Transmission** - Passkeys use public-key cryptography  
+- **Biometric Verification** - Relies on the device's secure enclave
 
-## Security Notes
-
-⚠️ **This is a demonstration app for learning purposes!**
-
-For production use, implement:
-- ✅ Use a real database (PostgreSQL, MySQL, MongoDB)
-- ✅ Hash passwords with bcrypt/argon2 (not just encryption)
-- ✅ Store encryption keys in environment variables or key management service
-- ✅ Use proper SSL certificates (Let's Encrypt)
-- ✅ Implement rate limiting (Flask-Limiter)
-- ✅ Add CSRF protection (Flask-WTF)
-- ✅ Verify passkey assertions cryptographically
-- ✅ Add account recovery flows
-- ✅ Implement session timeout
-- ✅ Add audit logging
-- ✅ Use environment variables for secrets
-
-## Why Passkeys Are Better
-
-1. **No Passwords** - Nothing to remember, leak, or phish
-2. **Phishing-Proof** - Keys are domain-bound, can't be used on fake sites
-3. **Faster** - 2 seconds vs 10+ seconds for login
-4. **User-Friendly** - Same biometric you already use to unlock device
-5. **More Secure** - Private keys never leave device's secure hardware
-6. **No SMS** - Not vulnerable to SIM swapping attacks
-7. **Offline Capable** - Works without internet connection
-8. **Cross-Device** - Can sync via iCloud Keychain, etc.
 
 ## Browser Support
 
-Passkeys work in:
-- ✅ Chrome 67+ (all platforms)
-- ✅ Safari 13+ (macOS, iOS)
-- ✅ Firefox 60+ (all platforms)
-- ✅ Edge 18+ (Windows, macOS)
+### Passkeys work in:
+- Chrome 67+ (all platforms)
+- Safari 13+ (macOS, iOS)
+- Firefox 60+ (all platforms)
+- Edge 18+ (Windows, macOS)
 
-## Troubleshooting
 
-### "Passkey not working"
-- Ensure you're using **https://localhost:5001** (not http://)
-- Check browser supports WebAuthn
-- Ensure biometrics are set up on your device
-- Try using **localhost** instead of **127.0.0.1** in URL
+## For future improvements, we plan to:
+- Use proper SSL certificates (Let's Encrypt)
+- Implement rate limiting (Flask-Limiter)
+- Add CSRF protection (Flask-WTF)
+- Verify passkey assertions cryptographically
+- Add account recovery flows
+- Implement session timeout
+- Add audit logging
 
-### "Certificate warning"
-- Normal for self-signed certificates in development
-- Click "Advanced" → "Proceed to localhost (unsafe)"
-- This is safe for local development only
 
-### "Touch ID not prompted"
-- Verify Touch ID is enabled in System Preferences (macOS)
-- Try Chrome or Safari (best WebAuthn support on macOS)
-- Ensure your device has biometric hardware
 
-### "cryptography.fernet.InvalidToken error"
-- You have an old plaintext users.json file
-- **Solution**: Delete or rename it: `mv users.json users.json.backup`
-- Restart the app - it will create a fresh encrypted database
-- Use the registration form to create new accounts
+## Credits
 
-### "Could not build url for endpoint"
-- Your app.py is missing routes
-- Make sure you're using the latest version of app.py
-- Check that all routes are defined
+### Developers
 
-## Important Files to Keep Secret
+- Jake Lockitch
+- Leah Goldin
+- Irina Vilcu
+- Condoleezza Agbeko
+- Mariam Kamara
+- Enna Pirvu
 
-Add to `.gitignore`:
-```
-encryption.key
-users.json
-*.pyc
-__pycache__/
-.DS_Store
-```
+### Built with:
+- Flask - Web framework
+- PyOTP - TOTP implementation
+- Cryptography - Fernet encryption
+- WebAuthn API - Passkey standard
+- OAuth 2.0 - Social authentication
 
-**Never commit these files to version control!**
-
-## Data Format
-
-### Plaintext (in memory)
-```json
-{
-    "username": {
-        "password": "password123",
-        "mfa_secret": "JBSWY3DPEHPK3PXP",
-        "passkey_credentials": [...]
-    }
-}
-```
-
-### Encrypted (in users.json)
-```json
-{
-    "username": {
-        "password": "gAAAAABl...",
-        "mfa_secret": "gAAAAABl...",
-        "passkey_credentials": [...]
-    }
-}
-```
+### Deployed with:
+- Render - web server
+- Supabase - PostgreSQL database manager
 
 ## Learn More
 
@@ -283,44 +265,3 @@ __pycache__/
 ### Security & Cryptography
 - [Fernet Specification](https://github.com/fernet/spec/) - Encryption details
 - [OWASP Authentication](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/README) - Best practices
-
-## Development
-
-### Adding New Users Programmatically
-```python
-from app import users, save_users
-
-users['newuser'] = {
-    'password': 'securepassword',
-    'mfa_secret': None,
-    'passkey_credentials': []
-}
-save_users(users)
-```
-
-### Checking Encrypted Data
-```python
-import json
-with open('users.json', 'r') as f:
-    print(json.dumps(json.load(f), indent=2))
-```
-
-## License
-
-Free to use for learning and demonstration purposes.
-
-## Contributing
-
-This is a demonstration project. Feel free to fork and modify for your own learning!
-
-## Credits
-
-Built with:
-- Flask - Web framework
-- PyOTP - TOTP implementation
-- Cryptography - Fernet encryption
-- WebAuthn API - Passkey standard
-
----
-
-**Made with ❤️ to demonstrate modern authentication methods**
