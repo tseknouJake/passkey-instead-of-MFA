@@ -54,7 +54,8 @@ python3 app.py
 
 The app will start on **https://localhost:5001**
 AND **https://127.0.0.1:5001**
-AND **https://192.168.1.150:5001**
+
+⚠️ **https://145.127.79.113:5001** is also a valid host, but it will not work as intended with the Google login.
 
  Your browser will warn about the self-signed certificate. Click "Advanced" → "Proceed to localhost" (safe for local development)
 
@@ -64,9 +65,6 @@ gunicorn app:app
 ```
 
 Then the app will start on **http://127.0.0.1:8000**
-
-⚠️ **Currently, all the features can be accessed on any of those ports, except for social login, which will be set up 
-later. To access the full functionality set, see the deployed version: https://project2-2-group10-2026.onrender.com**
 
 
 ## Usage
