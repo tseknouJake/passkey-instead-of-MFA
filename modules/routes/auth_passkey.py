@@ -8,13 +8,24 @@ Handles:
 """
 
 from flask import Blueprint, render_template, request, jsonify, session, redirect
+from functools import wraps
 import os
 import base64
-
 from modules.services.user_service import get_user, add_passkey_credential, verify_user_password
 from modules.utils.passkey_helpers import normalize_passkey_host, get_passkey_rp_id
+from modules.routes.auth_classic import create_user_session
 
 auth_passkey = Blueprint('auth_passkey', __name__)
+
+
+def login_required_passkey(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'username' not in session:
+            return jsonify({'error': 'Not authenticated'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
 
 @auth_passkey.before_request
 def normalize_passkey_origin():
@@ -58,8 +69,7 @@ def normalize_passkey_origin():
     )
 
 
-#TODO: are methods needed here?
-@auth_passkey.route('/passkey-login', methods=['GET', 'POST'])
+@auth_passkey.route('/passkey-login', methods=['GET'])
 def passkey_login():
     """
     Render passkey login page.
@@ -78,12 +88,7 @@ def passkey_register():
 
         user = get_user(username)
         if verify_user_password(user, password):
-            session['username'] = username
-            session['auth_method'] = 'passkey'
-            session['passkey_verified'] = False
-            session['classic_verified'] = False
-            session['social_verified'] = False
-
+            create_user_session(username, auth_method='passkey')
             return render_template('passkey_register.html', username=username)
         else:
             return render_template('passkey_register.html', error='Invalid credentials')
@@ -92,6 +97,7 @@ def passkey_register():
 
 
 @auth_passkey.route('/api/passkey/register-options', methods=['POST'])
+@login_required_passkey
 def passkey_register_options():
     """
     Generate WebAuthn registration options for the client.
@@ -105,10 +111,7 @@ def passkey_register_options():
         JSON: Registration options including challenge, RP info, and user info.
     """
 
-    username = session.get('username')
-    if not username:
-        return jsonify({'error': 'Not authenticated'}), 401
-
+    username = session['username']
     rp_id = get_passkey_rp_id()
 
     challenge = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip('=')
@@ -121,7 +124,7 @@ def passkey_register_options():
             'id': rp_id
         },
         'user': {
-            'id': base64.urlsafe_b64encode(username.encode()).decode().rstrip('='), #TODO: don't we have a decrypt function for this?
+            'id': base64.urlsafe_b64encode(username.encode()).decode().rstrip('='),
             'name': username,
             'displayName': username
         },
@@ -142,6 +145,7 @@ def passkey_register_options():
 
 
 @auth_passkey.route('/api/passkey/register-verify', methods=['POST'])
+@login_required_passkey
 def passkey_register_verify():
     """
     Verify and store a newly created passkey credential.
@@ -155,10 +159,7 @@ def passkey_register_verify():
         JSON: सफलता response indicating successful registration.
     """
 
-    username = session.get('username')
-    if not username:
-        return jsonify({'error': 'Not authenticated'}), 401
-
+    username = session['username']
     credential = request.json
 
     add_passkey_credential(username, credential)
@@ -196,7 +197,7 @@ def passkey_login_options():
 
     rp_id = get_passkey_rp_id()
 
-    challenge = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip('=') #TODO: same as before - decryption?
+    challenge = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip('=')
     session['passkey_challenge'] = challenge
     session['username'] = username
 
@@ -220,6 +221,7 @@ def passkey_login_options():
 
 
 @auth_passkey.route('/api/passkey/login-verify', methods=['POST'])
+@login_required_passkey
 def passkey_login_verify():
     """
     Verify a passkey authentication response.
@@ -231,14 +233,9 @@ def passkey_login_verify():
     Returns:
         JSON: Success response indicating authentication completion.
     """
-    username = session.get('username')
-    if not username:
-        return jsonify({'error': 'Not authenticated'}), 401
 
-    session['auth_method'] = 'passkey'
+    username = session['username']
+    create_user_session(username, auth_method='passkey')
     session['passkey_verified'] = True
-    session['mfa_verified'] = False
-    session['classic_verified'] = False
-    session['social_verified'] = False
 
     return jsonify({'success': True})

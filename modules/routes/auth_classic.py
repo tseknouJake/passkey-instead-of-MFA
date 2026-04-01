@@ -12,37 +12,48 @@ from modules.utils.decorators import login_required
 
 auth_classic = Blueprint('auth_classic', __name__, url_prefix='/auth')
 
+
+def validate_registration(username, password, confirm_password):
+    """
+    Validate registration from input
+    """
+    if not username or not password:
+        return 'Username and password are required'
+    if len(password) < 8:
+        return 'Password must be at least 8 characters'
+    if password != confirm_password:
+        return 'Passwords do not match'
+    if get_user(username):
+        return 'Username already exists'
+    return None
+
+
+def create_user_session(username, auth_method='classic'):
+    session['username'] = username
+    session['auth_method'] = auth_method
+    session['classic_verified'] = auth_method == 'classic'
+    session['mfa_verified'] = False
+    session['passkey_verified'] = False
+    session['social_verified'] = False
+
+
 @auth_classic.route('/register', methods=['GET', 'POST'])
 def register():
     """
     User registration route.
     """
-    #TODO: refactor into multiple functions
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
-        if not username or not password:
-            return render_template('register.html', error='Username and password are required')
-
-        if len(password) < 8:
-            return render_template('register.html', error='Password must be at least 8 characters')
-
-        if password != confirm_password:
-            return render_template('register.html', error='Passwords do not match')
-
-        if get_user(username):
-            return render_template('register.html', error='Username already exists')
+        error = validate_registration(username, password, confirm_password)
+        if error:
+            return render_template('register.html', error=error)
 
         create_user(username, password)
-
-        session['username'] = username
-        session['auth_method'] = 'classic'
-        session['classic_verified'] = True
-        session['mfa_verified'] = False
-        session['passkey_verified'] = False
-        session['social_verified'] = False
+        create_user_session(username)
         session['registered'] = True
 
         return redirect(url_for('auth_classic.setup_choice'))
@@ -60,6 +71,7 @@ def setup_choice():
         return redirect(url_for('main.index'))
     return render_template('setup_choice.html', username=session['username'])
 
+
 @auth_classic.route('/login', methods=['GET', 'POST'])
 def password_login():
     """
@@ -70,15 +82,11 @@ def password_login():
         password = request.form.get('password')
 
         user = get_user(username)
-        if verify_user_password(user, password):
-            session['username'] = username
-            session['auth_method'] = 'classic'
-            session['classic_verified'] = True
-            session['mfa_verified'] = False
-            session['passkey_verified'] = False
-            session['social_verified'] = False
-            return redirect('/questionnaire')
+        if not verify_user_password(user, password):
+            return render_template('login.html', error='Invalid credentials')
 
-        return render_template('login.html', error='Invalid credentials')
+        create_user_session(username)
+
+        return redirect('/questionnaire')
 
     return render_template('login.html')

@@ -18,15 +18,18 @@ def index():
 
     Redirects authenticated users to the dashboard.
     """
-    if 'username' in session and (
+    if is_authenticated():
+        return redirect(url_for('main.dashboard'))
+    return render_template('index.html')
+
+
+def is_authenticated():
+    return 'username' in session and (
         session.get('mfa_verified') or
         session.get('passkey_verified') or
         session.get('classic_verified') or
         session.get('social_verified')
-    ):
-        return redirect(url_for('main.dashboard'))
-
-    return render_template('index.html')
+    )
 
 
 @main.route('/dashboard')
@@ -49,6 +52,7 @@ def dashboard():
 @main.route('/questionnaire')
 def questionnaire():
     return send_from_directory('questionnaire', 'index.html')
+
 
 @main.route('/questionnaire/<path:filename>')
 def questionnaire_static(filename):
