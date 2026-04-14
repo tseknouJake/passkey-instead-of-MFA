@@ -6,6 +6,7 @@ dashboard, and logout.
 """
 
 from flask import Blueprint, render_template, session, redirect, url_for, send_from_directory
+from modules.services.study_service import get_auth_method_label, get_study_response
 from modules.utils.decorators import login_required
 
 main = Blueprint('main', __name__)
@@ -42,10 +43,13 @@ def dashboard():
     """
     username = session['username']
     auth_method = session.get('auth_method')
+    study_response = get_study_response(username, auth_method) if auth_method else None
     return render_template(
         'dashboard.html',
         username=username,
-        auth_method=auth_method
+        auth_method=auth_method,
+        auth_method_label=get_auth_method_label(auth_method),
+        study_completed=study_response is not None,
     )
 
 

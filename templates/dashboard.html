@@ -32,9 +32,17 @@
             <p>You have successfully authenticated</p>
             {% endif %}
 
+            <div class="study-summary">
+                <p>Current login method under study: <strong>{{ auth_method_label }}</strong></p>
+                <p class="study-status {{ 'study-complete' if study_completed else 'study-pending' }}">
+                    {{ 'User study already completed for this method.' if study_completed else 'User study not completed for this method yet.' }}
+                </p>
+            </div>
+
             <div class="actions">
                 <a href="{{ url_for('main.questionnaire') }}" class="action-btn primary-action">Simulation</a>
-                <button type="button" class="action-btn secondary-action">User Study Questionnaire</button>
+                <a href="{{ url_for('study.user_study') }}" class="action-btn secondary-action">User Study</a>
+                <button type="button" class="action-btn tertiary-action">TODO: check whether this works on actual database</button>
             </div>
         </div>
     </div>
