@@ -1,5 +1,6 @@
 encryption.key
 users.json
+study_data.json
 /.env
 __pycache__/
 *.pyc
