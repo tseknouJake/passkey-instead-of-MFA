@@ -1,4 +1,5 @@
 encryption.key
 users.json
 /.env
+__pycache__/
 *.pyc
