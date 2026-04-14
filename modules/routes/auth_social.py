@@ -82,6 +82,19 @@ def google_callback():
 
     email = user_info['email']
 
+    if session.get('oauth_purpose') == 'setup':
+        session.pop('oauth_purpose', None)
+        username = session.get('username')
+        if username:
+            add_email_credential(username, email)
+            
+            session['social_verified'] = True
+            session['classic_verified'] = False
+            session['mfa_verified'] = False
+            session['passkey_verified'] = False
+            return redirect('/questionnaire')
+        return redirect(url_for('main.index'))
+
     if not get_user(email):
         session['pending_social_email'] = email
         session['pending_social_provider'] = 'google'
@@ -129,3 +142,21 @@ def set_up_password():
         session['social_verified'] = True
         return redirect('/questionnaire')
     return render_template('register.html', error='', username=email, username_readonly=True)
+
+@auth_social.route('/social/setup-social')
+def setup_social():
+    if 'username' not in session:
+        return redirect(url_for('main.index'))
+
+    oauth_error = get_google_oauth_error(current_app)
+    if oauth_error:
+        return render_template(
+            'google_login.html',
+            error=oauth_error,
+            oauth_available=False,
+            callback_uri=get_google_redirect_uri(current_app)
+        ), 503
+
+    session['oauth_purpose'] = 'setup'
+    oauth = get_google_oauth()
+    return oauth.google.authorize_redirect(get_google_redirect_uri(current_app))
