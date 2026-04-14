@@ -109,3 +109,20 @@ def add_passkey_credential(username: str, credential: dict) -> None:
     supabase.table("users").update({
         "passkey_credentials": updated_credentials
     }).eq("username", username).execute()
+
+
+def add_email_credential(username: str, email: str) -> None:
+    """
+    Add an email credential to a user's stored credentials.
+
+    Args:
+        username (str): The username.
+        email (str): The user's email address.
+
+    Authors:
+        | Leah Goldin
+    """
+
+    supabase.table("users").update({
+        "email": email
+    }).eq("username", username).execute()
