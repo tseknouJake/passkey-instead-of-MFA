@@ -48,7 +48,13 @@ def get_user_by_email(email: str) -> dict | None:
         | Leah Goldin
     """
     response = supabase.table("users").select("*").eq("email", email).execute()
-    user = response.data[0] if response.data else None
+
+    if response.data:
+        if len(response.data) > 1:
+            raise ValueError(f"Database Integrity Error: Multiple users found with the same email ({email})")
+        user = response.data[0]
+    else:
+        user = None
 
     if user:
         if user.get("mfa_secret"): #TODO: what is that and why?

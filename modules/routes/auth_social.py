@@ -53,6 +53,10 @@ def login_google():
 def google_callback():
     """
     Handle Google OAuth callback and log the user in.
+
+    Authors:
+        | Irina Vilcu
+        | Leah Goldin
     """
     oauth_error = get_google_oauth_error(current_app)
     if oauth_error:
@@ -86,6 +90,23 @@ def google_callback():
         session.pop('oauth_purpose', None)
         username = session.get('username')
         if username:
+            try:
+                existing_user = get_user_by_email(email)
+                if existing_user:
+                    return render_template(
+                        'google_login.html',
+                        error='This Google account is already linked to another account. Try logging in.',
+                        oauth_available=True,
+                        callback_uri=get_google_redirect_uri(current_app)
+                    ), 409
+            except ValueError as e:
+                return render_template(
+                    'google_login.html',
+                    error='Account linking failed due to a database integrity error (duplicate emails). Try with a different email address.',
+                    oauth_available=True,
+                    callback_uri=get_google_redirect_uri(current_app)
+                ), 500
+
             add_email_credential(username, email)
             
             session['social_verified'] = True
@@ -95,7 +116,16 @@ def google_callback():
             return redirect('/questionnaire')
         return redirect(url_for('main.index'))
 
-    user_record = get_user_by_email(email)
+    try:
+        user_record = get_user_by_email(email)
+    except ValueError as e:
+        return render_template(
+            'google_login.html',
+            error='Login failed due to a database integrity error (duplicate emails). Try with a different email address.',
+            oauth_available=True,
+            callback_uri=get_google_redirect_uri(current_app)
+        ), 500
+
     if not user_record:
         session['pending_social_email'] = email
         session['pending_social_provider'] = 'google'
