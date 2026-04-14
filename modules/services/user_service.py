@@ -29,7 +29,29 @@ def get_user(username: str) -> dict | None:
     user = response.data[0] if response.data else None
 
     if user:
-        if user.get("mfa_secret"):
+        if user.get("mfa_secret"): #TODO: what is that and why?
+            user["mfa_secret"] = maybe_decrypt_data(user["mfa_secret"])
+
+    return user
+
+def get_user_by_email(email: str) -> dict | None:
+    """
+    Retrieve a user by their email.
+
+    Args:
+        email (str): The email of the user.
+
+    Returns:
+        dict | None: The user object if found, otherwise None.
+
+    Authors:
+        | Leah Goldin
+    """
+    response = supabase.table("users").select("*").eq("email", email).execute()
+    user = response.data[0] if response.data else None
+
+    if user:
+        if user.get("mfa_secret"): #TODO: what is that and why?
             user["mfa_secret"] = maybe_decrypt_data(user["mfa_secret"])
 
     return user

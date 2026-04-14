@@ -8,7 +8,7 @@ Handles:
 """
 
 from flask import Blueprint, render_template, redirect, session, url_for, request
-from modules.services.user_service import get_user, create_user, add_email_credential
+from modules.services.user_service import get_user, create_user, add_email_credential, get_user_by_email
 from modules.utils.oauth import get_google_oauth, get_google_oauth_error, get_google_redirect_uri
 from modules.routes.auth_classic import create_user_session
 from flask import current_app
@@ -95,12 +95,14 @@ def google_callback():
             return redirect('/questionnaire')
         return redirect(url_for('main.index'))
 
-    if not get_user(email):
+    user_record = get_user_by_email(email)
+    if not user_record:
         session['pending_social_email'] = email
         session['pending_social_provider'] = 'google'
         return redirect(url_for('auth_social.set_up_password'))
 
-    create_user_session(email, auth_method='social')
+    actual_username = user_record['username']
+    create_user_session(actual_username, auth_method='social')
     session['social_verified'] = True
     return redirect('/questionnaire')
 
@@ -122,26 +124,31 @@ def set_up_password():
     email = session['pending_social_email']
 
     if request.method == 'POST':
+        username = request.form.get('username')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
+        if not username:
+            return render_template('register.html', error='Please enter a username.', username=username)
+        if get_user(username):
+            return render_template('register.html', error='Username already taken. Please choose another one.', username=username)
         if not password:
-            return render_template('register.html', error='Please enter a password.', username=email, username_readonly=True)
+            return render_template('register.html', error='Please enter a password.', username=username)
         if len(password) < 8:
-            return render_template('register.html', error='Password must be at least 8 characters.', username=email, username_readonly=True)
+            return render_template('register.html', error='Password must be at least 8 characters.', username=username)
         if password != confirm_password:
-            return render_template('register.html', error='Passwords do not match', username=email, username_readonly=True)
+            return render_template('register.html', error='Passwords do not match.', username=username)
 
         session.pop('pending_social_email')
         session.pop('pending_social_provider')
 
-        #TODO: maybe force the user to make a username instead of using the email as username?
-        create_user(email, password) # using email as a username for a new account
-        add_email_credential(email, email) # using email as a username
-        create_user_session(email, auth_method='social')
+        create_user(username, password) 
+        add_email_credential(username, email) 
+        create_user_session(username, auth_method='social')
         session['social_verified'] = True
         return redirect('/questionnaire')
-    return render_template('register.html', error='', username=email, username_readonly=True)
+        
+    return render_template('register.html', error='')
 
 @auth_social.route('/social/setup-social')
 def setup_social():
