@@ -31,6 +31,11 @@
             {% else %}
             <p>You have successfully authenticated</p>
             {% endif %}
+
+            <div class="actions">
+                <a href="{{ url_for('main.questionnaire') }}" class="action-btn primary-action">Open Questionnaire</a>
+                <button type="button" class="action-btn secondary-action">TODO</button>
+            </div>
         </div>
     </div>
 </body>

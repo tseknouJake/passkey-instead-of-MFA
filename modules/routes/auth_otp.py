@@ -100,7 +100,7 @@ def verify_mfa():
             session['classic_verified'] = False
             session['social_verified'] = False
             session['passkey_verified'] = False
-            return redirect('/questionnaire')
+            return redirect(url_for('main.dashboard'))
         else:
             return render_template('verify_mfa.html', error='Invalid MFA code')
 

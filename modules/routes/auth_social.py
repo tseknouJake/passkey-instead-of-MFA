@@ -89,7 +89,7 @@ def google_callback():
 
     create_user_session(email, auth_method='social')
     session['social_verified'] = True
-    return redirect('/questionnaire')
+    return redirect(url_for('main.dashboard'))
 
 
 @auth_social.route('/social/set-up-password', methods=['GET', 'POST'])
@@ -115,5 +115,5 @@ def set_up_password():
         create_user(email, password)
         create_user_session(email, auth_method='social')
         session['social_verified'] = True
-        return redirect('/questionnaire')
+        return redirect(url_for('main.dashboard'))
     return render_template('register.html', error='', username=email, username_readonly=True)

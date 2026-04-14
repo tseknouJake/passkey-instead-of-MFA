@@ -87,6 +87,6 @@ def password_login():
 
         create_user_session(username)
 
-        return redirect('/questionnaire')
+        return redirect(url_for('main.dashboard'))
 
     return render_template('login.html')
