@@ -8,7 +8,7 @@ Handles:
 """
 
 from flask import Blueprint, render_template, redirect, session, url_for, request
-from modules.services.user_service import get_user, create_user
+from modules.services.user_service import get_user, create_user, add_email_credential
 from modules.utils.oauth import get_google_oauth, get_google_oauth_error, get_google_redirect_uri
 from modules.routes.auth_classic import create_user_session
 from flask import current_app
@@ -94,6 +94,16 @@ def google_callback():
 
 @auth_social.route('/social/set-up-password', methods=['GET', 'POST'])
 def set_up_password():
+    """
+        Handle password setup for users registering via social login.
+
+        Authors:
+            | Irina Vilcu
+            | Leah Goldin
+            | Mariam Kamara
+            | Condoleezza Agbeko
+    """
+
     if 'pending_social_email' not in session:
         return redirect(url_for('main.index'))
     email = session['pending_social_email']
@@ -112,7 +122,9 @@ def set_up_password():
         session.pop('pending_social_email')
         session.pop('pending_social_provider')
 
-        create_user(email, password)
+        #TODO: maybe force the user to make a username instead of using the email as username?
+        create_user(email, password) # using email as a username for a new account
+        add_email_credential(email, email) # using email as a username
         create_user_session(email, auth_method='social')
         session['social_verified'] = True
         return redirect('/questionnaire')
