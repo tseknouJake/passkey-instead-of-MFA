@@ -1,3 +1,4 @@
 encryption.key
 users.json
 /.env
+log.txt

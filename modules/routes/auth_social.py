@@ -12,11 +12,13 @@ from modules.services.user_service import get_user, create_user
 from modules.utils.oauth import get_google_oauth, get_google_oauth_error, get_google_redirect_uri
 from modules.routes.auth_classic import create_user_session
 from flask import current_app
+from modules.utils.decorators import start_login_timer
 
 auth_social = Blueprint('auth_social', __name__, url_prefix='/auth')
 
 
 @auth_social.route('/google-login-page')
+@start_login_timer
 def google_login_page():
     """
     Render the Google login page with configuration status.

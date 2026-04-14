@@ -6,12 +6,13 @@ dashboard, and logout.
 """
 
 from flask import Blueprint, render_template, session, redirect, url_for, send_from_directory
-from modules.utils.decorators import login_required
+from modules.utils.decorators import cancel_login_timer, login_required, complete_login_timer, cancel_login_timer
 
 main = Blueprint('main', __name__)
 
 
 @main.route('/')
+@cancel_login_timer
 def index():
     """
     Landing page.
@@ -34,6 +35,7 @@ def is_authenticated():
 
 @main.route('/dashboard')
 @login_required
+@complete_login_timer
 def dashboard():
     """
     User dashboard.
@@ -50,6 +52,7 @@ def dashboard():
 
 
 @main.route('/questionnaire')
+@complete_login_timer
 def questionnaire():
     return send_from_directory('questionnaire', 'index.html')
 

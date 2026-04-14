@@ -11,6 +11,64 @@ authentication and access control.
 from functools import wraps
 from flask import session, redirect, url_for
 
+import time
+
+login_time = None
+login_method = None
+failed_logins = 0
+
+def increment_failed_login():
+    global failed_logins
+    failed_logins += 1
+
+def start_login_timer(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+
+        if not login_time:
+            login_time = time.time()
+            login_method = f.__name__
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def cancel_login_timer(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+        global failed_logins
+
+        failed_logins = 0
+        login_time = None
+        login_method = None
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def complete_login_timer(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+        global failed_logins
+
+        if login_time:
+            now = time.time()
+            elapsed = now - login_time
+
+            with open("log.txt", "a") as file:
+                _ = file.write(f"login method: {login_method}, time elapsed: {elapsed}, user: {session['username']}, failed logins: {failed_logins}\n")
+
+            login_time = None
+
+        failed_logins = 0
+
+        return f(*args, **kwargs)
+    return decorated_function
+    
 
 def login_required(f):
     """
