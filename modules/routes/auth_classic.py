@@ -8,7 +8,7 @@ Handles:
 
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from modules.services.user_service import get_user, create_user, verify_user_password, get_user_by_email, add_email_credential
-from modules.utils.decorators import login_required
+from modules.utils.decorators import login_required, increment_failed_login, start_login_timer
 
 auth_classic = Blueprint('auth_classic', __name__, url_prefix='/auth')
 
@@ -73,6 +73,7 @@ def setup_choice():
 
 
 @auth_classic.route('/login', methods=['GET', 'POST'])
+@start_login_timer
 def password_login():
     """
     Classic login route (username + password).
@@ -83,6 +84,7 @@ def password_login():
 
         user = get_user(username)
         if not verify_user_password(user, password):
+            increment_failed_login()
             return render_template('login.html', error='Invalid credentials')
 
         create_user_session(username)

@@ -5,12 +5,78 @@ This module contains reusable decorators for handling
 authentication and access control.
 """
 
-# TODO: @Enna add a time measuring feature that will be reused in all the routes and will log all the data in some
-# kind of log file (can be txt for now)
-
 from functools import wraps
 from flask import session, redirect, url_for
 
+import time
+
+login_time = None
+login_method = None
+failed_logins = 0
+
+def increment_failed_login():
+    global failed_logins
+    failed_logins += 1
+"""
+Counts how many times the user failed to log in.
+"""
+def start_login_timer(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+
+        if not login_time:
+            login_time = time.time()
+            login_method = f.__name__
+
+        return f(*args, **kwargs)
+    return decorated_function
+"""
+Starts the timer and tracks username, method of login and number of failed attempts.
+This starts every time a new method is chosen. Registering a passkey is not counted as a method despite it taking you to the questionare.
+"""
+def cancel_login_timer(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+        global failed_logins
+
+        failed_logins = 0
+        login_time = None
+        login_method = None
+
+        return f(*args, **kwargs)
+    return decorated_function
+"""
+Resets the login data without writing anything to the text file.
+This happens when backing out of a login or when registering a new passkey.
+"""
+def complete_login_timer(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+        global failed_logins
+
+        if login_time:
+            now = time.time()
+            elapsed = now - login_time
+
+            with open("log.txt", "a") as file:
+                _ = file.write(f"login method: {login_method}, time elapsed: {elapsed}, user: {session['username']}, failed logins: {failed_logins}\n")
+
+            login_time = None
+
+        failed_logins = 0
+
+        return f(*args, **kwargs)
+    return decorated_function
+"""
+Writes all the gatered data into a text file in the current directory.
+This runs whenever a login process is completed and the user is taken to the questionare, with the exception of registering.
+"""
 
 def login_required(f):
     """

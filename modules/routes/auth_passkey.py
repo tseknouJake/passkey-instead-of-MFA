@@ -14,6 +14,7 @@ import base64
 from modules.services.user_service import get_user, add_passkey_credential, verify_user_password
 from modules.utils.passkey_helpers import normalize_passkey_host, get_passkey_rp_id
 from modules.routes.auth_classic import create_user_session
+from modules.utils.decorators import cancel_login_timer, increment_failed_login, start_login_timer
 
 auth_passkey = Blueprint('auth_passkey', __name__)
 
@@ -70,6 +71,7 @@ def normalize_passkey_origin():
 
 
 @auth_passkey.route('/passkey-login', methods=['GET'])
+@start_login_timer
 def passkey_login():
     """
     Render passkey login page.
@@ -78,6 +80,7 @@ def passkey_login():
 
 
 @auth_passkey.route('/passkey-register', methods=['GET', 'POST'])
+@cancel_login_timer
 def passkey_register():
     """
     Authenticate user before allowing passkey registration.
@@ -190,6 +193,7 @@ def passkey_login_options():
 
     user = get_user(username)
     if not user:
+        increment_failed_login()
         return jsonify({'error': 'User not found'}), 404
 
     if not user.get('passkey_credentials'):
