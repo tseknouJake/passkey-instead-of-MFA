@@ -7,9 +7,8 @@ Handles:
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, session
-from modules.services.user_service import get_user, create_user, verify_user_password
-from modules.utils.decorators import increment_failed_login, login_required
-from modules.utils.decorators import start_login_timer
+from modules.services.user_service import get_user, create_user, verify_user_password, get_user_by_email, add_email_credential
+from modules.utils.decorators import login_required, increment_failed_login, start_login_timer
 
 auth_classic = Blueprint('auth_classic', __name__, url_prefix='/auth')
 
@@ -89,6 +88,16 @@ def password_login():
             return render_template('login.html', error='Invalid credentials')
 
         create_user_session(username)
+
+        pending_email = session.pop('pending_social_email', None)
+        session.pop('pending_social_provider', None)
+
+        if pending_email:
+            try:
+                if not get_user_by_email(pending_email):
+                    add_email_credential(username, pending_email)
+            except ValueError:
+                pass
 
         return redirect('/questionnaire')
 
