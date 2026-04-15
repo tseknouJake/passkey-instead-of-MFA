@@ -29,7 +29,35 @@ def get_user(username: str) -> dict | None:
     user = response.data[0] if response.data else None
 
     if user:
-        if user.get("mfa_secret"):
+        if user.get("mfa_secret"): #TODO: what is that and why?
+            user["mfa_secret"] = maybe_decrypt_data(user["mfa_secret"])
+
+    return user
+
+def get_user_by_email(email: str) -> dict | None:
+    """
+    Retrieve a user by their email.
+
+    Args:
+        email (str): The email of the user.
+
+    Returns:
+        dict | None: The user object if found, otherwise None.
+
+    Authors:
+        | Leah Goldin
+    """
+    response = supabase.table("users").select("*").eq("email", email).execute()
+
+    if response.data:
+        if len(response.data) > 1:
+            raise ValueError(f"Database Integrity Error: Multiple users found with the same email ({email})")
+        user = response.data[0]
+    else:
+        user = None
+
+    if user:
+        if user.get("mfa_secret"): #TODO: what is that and why?
             user["mfa_secret"] = maybe_decrypt_data(user["mfa_secret"])
 
     return user
@@ -108,4 +136,21 @@ def add_passkey_credential(username: str, credential: dict) -> None:
 
     supabase.table("users").update({
         "passkey_credentials": updated_credentials
+    }).eq("username", username).execute()
+
+
+def add_email_credential(username: str, email: str) -> None:
+    """
+    Add an email credential to a user's stored credentials.
+
+    Args:
+        username (str): The username.
+        email (str): The user's email address.
+
+    Authors:
+        | Leah Goldin
+    """
+
+    supabase.table("users").update({
+        "email": email
     }).eq("username", username).execute()
