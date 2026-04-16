@@ -1,5 +1,5 @@
 create table if not exists public.study_profiles (
-    username text primary key references public.users (username) on delete cascade,
+    username text primary key,
     age integer not null check (age between 13 and 120),
     gender text not null,
     technical_expertise smallint not null check (technical_expertise between 1 and 5),
@@ -8,7 +8,7 @@ create table if not exists public.study_profiles (
 );
 
 create table if not exists public.study_responses (
-    username text not null references public.users (username) on delete cascade,
+    username text not null,
     auth_method text not null check (auth_method in ('classic', 'mfa', 'passkey', 'social')),
     used_before boolean not null,
     easy_to_log_in smallint not null check (easy_to_log_in between 1 and 5),
@@ -23,3 +23,9 @@ create table if not exists public.study_responses (
     updated_at timestamptz not null default now(),
     primary key (username, auth_method)
 );
+
+create index if not exists study_responses_auth_method_idx
+    on public.study_responses (auth_method);
+
+create index if not exists study_responses_updated_at_idx
+    on public.study_responses (updated_at desc);

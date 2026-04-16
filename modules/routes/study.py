@@ -9,6 +9,7 @@ from flask import Blueprint, redirect, render_template, request, session, url_fo
 from modules.services.study_service import (
     GENDER_OPTIONS,
     LIKERT_QUESTIONS,
+    StudyStorageSetupError,
     TECHNICAL_EXPERTISE_OPTIONS,
     USED_BEFORE_OPTIONS,
     get_auth_method_label,
@@ -102,8 +103,25 @@ def user_study():
         return redirect(url_for("main.dashboard"))
 
     auth_method_label = get_auth_method_label(auth_method)
-    profile = get_study_profile(username)
-    response = get_study_response(username, auth_method)
+    try:
+        profile = get_study_profile(username)
+        response = get_study_response(username, auth_method)
+    except StudyStorageSetupError as exc:
+        return render_template(
+            "user_study.html",
+            error=None,
+            saved=False,
+            form_data={},
+            auth_method=auth_method,
+            auth_method_label=auth_method_label,
+            likert_questions=LIKERT_QUESTIONS,
+            technical_expertise_options=TECHNICAL_EXPERTISE_OPTIONS,
+            gender_options=GENDER_OPTIONS,
+            used_before_options=USED_BEFORE_OPTIONS,
+            completed=False,
+            study_available=False,
+            study_error=str(exc),
+        )
 
     if request.method == "POST":
         validated, form_data, error = _validate_study_submission(request.form)
@@ -120,10 +138,29 @@ def user_study():
                 gender_options=GENDER_OPTIONS,
                 used_before_options=USED_BEFORE_OPTIONS,
                 completed=response is not None,
+                study_available=True,
+                study_error=None,
             )
 
-        save_study_profile(username, validated["profile"])
-        save_study_response(username, auth_method, validated["response"])
+        try:
+            save_study_profile(username, validated["profile"])
+            save_study_response(username, auth_method, validated["response"])
+        except StudyStorageSetupError as exc:
+            return render_template(
+                "user_study.html",
+                error=None,
+                saved=False,
+                form_data=form_data,
+                auth_method=auth_method,
+                auth_method_label=auth_method_label,
+                likert_questions=LIKERT_QUESTIONS,
+                technical_expertise_options=TECHNICAL_EXPERTISE_OPTIONS,
+                gender_options=GENDER_OPTIONS,
+                used_before_options=USED_BEFORE_OPTIONS,
+                completed=response is not None,
+                study_available=False,
+                study_error=str(exc),
+            )
         return redirect(url_for("study.user_study", saved=1))
 
     form_data = _merge_form_data(profile, response)
@@ -139,4 +176,6 @@ def user_study():
         gender_options=GENDER_OPTIONS,
         used_before_options=USED_BEFORE_OPTIONS,
         completed=response is not None,
+        study_available=True,
+        study_error=None,
     )

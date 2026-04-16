@@ -31,6 +31,11 @@
             <div class="error-banner">{{ error }}</div>
             {% endif %}
 
+            {% if study_error %}
+            <div class="error-banner">{{ study_error }}</div>
+            {% endif %}
+
+            {% if study_available %}
             <form method="POST" class="study-form">
                 <section class="form-section">
                     <h2>About You</h2>
@@ -139,6 +144,12 @@
                     <button type="submit" class="submit-btn">Save Study Response</button>
                 </div>
             </form>
+            {% else %}
+            <div class="study-unavailable-panel">
+                <p>The user study is currently unavailable because the database tables have not been created yet.</p>
+                <p>Once `sql/study_schema.sql` has been run in Supabase, this page will work without further code changes.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </body>

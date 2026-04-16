@@ -92,6 +92,10 @@ body {
     color: #805ad5;
 }
 
+.study-unavailable {
+    color: #b45309;
+}
+
 .actions {
     display: flex;
     justify-content: center;
@@ -133,6 +137,16 @@ body {
 
 .secondary-action:hover {
     background: #f7f8ff;
+}
+
+.disabled-action,
+.disabled-action:hover {
+    background: #e5e7eb;
+    color: #6b7280;
+    border-color: #d1d5db;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
 }
 
 .tertiary-action {

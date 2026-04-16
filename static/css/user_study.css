@@ -79,6 +79,15 @@ h1 {
     color: #991b1b;
 }
 
+.study-unavailable-panel {
+    border: 1px solid #fed7aa;
+    background: #fffbeb;
+    color: #92400e;
+    border-radius: 12px;
+    padding: 18px;
+    line-height: 1.6;
+}
+
 .study-form {
     display: grid;
     gap: 24px;

@@ -69,6 +69,18 @@ USED_BEFORE_OPTIONS = [
 _fallback_logged = False
 
 
+class StudyStorageSetupError(RuntimeError):
+    """
+    Raised when study storage is configured but the required database objects do not exist.
+    """
+
+
+STUDY_STORAGE_SETUP_MESSAGE = (
+    "Study storage is not ready yet. Run sql/study_schema.sql in Supabase "
+    "to create the study_profiles and study_responses tables."
+)
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -88,6 +100,23 @@ def _log_local_fallback(reason: str) -> None:
         reason,
     )
     _fallback_logged = True
+
+
+def _is_missing_study_table_error(exc: APIError) -> bool:
+    """
+    Detect the Supabase/PostgREST error returned when the study tables do not exist.
+    """
+    error_code = getattr(exc, "code", None)
+    if not error_code and hasattr(exc, "json"):
+        try:
+            error_code = exc.json().get("code")
+        except Exception:
+            error_code = None
+
+    message = str(exc)
+    return error_code == "PGRST205" and (
+        STUDY_PROFILE_TABLE in message or STUDY_RESPONSE_TABLE in message
+    )
 
 
 def _use_local_store() -> bool:
@@ -113,7 +142,9 @@ def _with_storage_fallback(remote_operation, local_operation):
     except httpx.RequestError as exc:
         _log_local_fallback(str(exc))
         return local_operation()
-    except APIError:
+    except APIError as exc:
+        if _is_missing_study_table_error(exc):
+            raise StudyStorageSetupError(STUDY_STORAGE_SETUP_MESSAGE) from exc
         raise
 
 
