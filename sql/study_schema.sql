@@ -13,6 +13,8 @@ create table if not exists public.study_responses (
     used_before boolean not null,
     easy_to_log_in smallint not null check (easy_to_log_in between 1 and 5),
     easy_to_understand smallint not null check (easy_to_understand between 1 and 5),
+    easy_to_get_set_up smallint not null check (easy_to_get_set_up between 1 and 5),
+    set_up_without_assistance smallint not null check (set_up_without_assistance between 1 and 5),
     quick_to_complete smallint not null check (quick_to_complete between 1 and 5),
     complete_without_help smallint not null check (complete_without_help between 1 and 5),
     felt_secure smallint not null check (felt_secure between 1 and 5),
