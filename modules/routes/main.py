@@ -11,12 +11,13 @@ from modules.services.study_service import (
     get_auth_method_label,
     get_study_response,
 )
-from modules.utils.decorators import login_required
+from modules.utils.decorators import cancel_login_timer, login_required, complete_login_timer, cancel_login_timer
 
 main = Blueprint('main', __name__)
 
 
 @main.route('/')
+@cancel_login_timer
 def index():
     """
     Landing page.
@@ -39,6 +40,7 @@ def is_authenticated():
 
 @main.route('/dashboard')
 @login_required
+@complete_login_timer
 def dashboard():
     """
     User dashboard.
@@ -68,6 +70,7 @@ def dashboard():
 
 
 @main.route('/questionnaire')
+@complete_login_timer
 def questionnaire():
     return send_from_directory('questionnaire', 'index.html')
 

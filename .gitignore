@@ -1,6 +1,7 @@
-encryption.key
-users.json
+log.txt
+.idea/
 study_data.json
 /.env
 __pycache__/
 *.pyc
+

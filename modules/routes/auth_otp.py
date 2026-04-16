@@ -18,6 +18,7 @@ import io
 import base64
 from modules.services.user_service import get_user, update_mfa_secret, verify_user_password
 from modules.routes.auth_classic import create_user_session
+from modules.utils.decorators import start_login_timer, increment_failed_login
 
 auth_otp = Blueprint('auth_otp', __name__, url_prefix='/auth')
 
@@ -32,6 +33,7 @@ def login_required_mfa(f):
 
 
 @auth_otp.route('/mfa-login', methods=['GET', 'POST'])
+@start_login_timer
 def mfa_login():
     """
     MFA login route.
@@ -49,6 +51,7 @@ def mfa_login():
             else:
                 return redirect(url_for('auth_otp.setup_mfa'))
         else:
+            increment_failed_login()
             return render_template('mfa_login.html', error='Invalid credentials')
 
     return render_template('mfa_login.html')
@@ -102,6 +105,7 @@ def verify_mfa():
             session['passkey_verified'] = False
             return redirect(url_for('main.dashboard'))
         else:
+            increment_failed_login()
             return render_template('verify_mfa.html', error='Invalid MFA code')
 
     return render_template('verify_mfa.html')
