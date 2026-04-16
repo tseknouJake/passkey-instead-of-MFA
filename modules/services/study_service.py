@@ -38,6 +38,8 @@ AUTH_METHOD_LABELS = {
 LIKERT_QUESTIONS = [
     ("easy_to_log_in", "It was easy for me to log in using this method"),
     ("easy_to_understand", "It was easy for me to understand how to log in using this method"),
+    ("easy_to_get_set_up", "This login method was easy for me to set up"),
+    ("set_up_without_assistance", "I could set up this login method without needing assistance"),
     ("quick_to_complete", "I could complete the login quickly using this method"),
     ("complete_without_help", "I could complete the login without needing help"),
     ("felt_secure", "This login method felt secure"),
