@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Study</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_study.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="top-bar">
+            <a href="{{ url_for('main.dashboard') }}" class="back-link">← Dashboard</a>
+            <a href="{{ url_for('main.logout') }}" class="logout-link">Logout</a>
+        </div>
+
+        <div class="study-card">
+            <div class="eyebrow">User Study</div>
+            <h1>{{ auth_method_label }}</h1>
+            <p class="intro">
+                Answer these questions based on the login method you just used.
+                {% if completed %}
+                Your previous submission for this method is loaded below and can be updated.
+                {% endif %}
+            </p>
+
+            {% if saved %}
+            <div class="success-banner">Your study response has been saved.</div>
+            {% endif %}
+
+            {% if error %}
+            <div class="error-banner">{{ error }}</div>
+            {% endif %}
+
+            {% if study_error %}
+            <div class="error-banner">{{ study_error }}</div>
+            {% endif %}
+
+            {% if study_available %}
+            <form method="POST" class="study-form">
+                <section class="form-section">
+                    <h2>About You</h2>
+
+                    <div class="field-grid">
+                        <div class="field">
+                            <label for="age">Age</label>
+                            <input
+                                type="number"
+                                id="age"
+                                name="age"
+                                min="13"
+                                max="120"
+                                required
+                                value="{{ form_data.get('age', '') }}"
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select an option</option>
+                                {% for option in gender_options %}
+                                <option value="{{ option }}" {% if form_data.get('gender') == option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="technical_expertise">Technical expertise</label>
+                        <select id="technical_expertise" name="technical_expertise" required>
+                            <option value="">Select a rating</option>
+                            {% for value, label in technical_expertise_options %}
+                            <option value="{{ value }}" {% if form_data.get('technical_expertise')|string == value|string %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>Experience With This Method</h2>
+
+                    <div class="field">
+                        <label>Had you used this login method before today?</label>
+                        <div class="choice-row">
+                            {% for value, label in used_before_options %}
+                            <label class="choice-chip">
+                                <input
+                                    type="radio"
+                                    name="used_before"
+                                    value="{{ value }}"
+                                    {% if form_data.get('used_before') == value or (form_data.get('used_before') is sameas true and value == 'yes') or (form_data.get('used_before') is sameas false and value == 'no') %}checked{% endif %}
+                                    required
+                                >
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="scale-legend">
+                        <span>1 = Strongly disagree</span>
+                        <span>5 = Strongly agree</span>
+                    </div>
+
+                    {% for field_name, prompt in likert_questions %}
+                    <div class="likert-block">
+                        <div class="statement">{{ prompt }}</div>
+                        <div class="likert-row">
+                            {% for value in range(1, 6) %}
+                            <label class="likert-option">
+                                <input
+                                    type="radio"
+                                    name="{{ field_name }}"
+                                    value="{{ value }}"
+                                    {% if form_data.get(field_name)|string == value|string %}checked{% endif %}
+                                    required
+                                >
+                                <span>{{ value }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </section>
+
+                <section class="form-section">
+                    <h2>Additional Feedback</h2>
+                    <div class="field">
+                        <label for="additional_feedback">What, if anything, felt confusing or frustrating?</label>
+                        <textarea
+                            id="additional_feedback"
+                            name="additional_feedback"
+                            rows="5"
+                            placeholder="Optional"
+                        >{{ form_data.get('additional_feedback', '') }}</textarea>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">Save Study Response</button>
+                </div>
+            </form>
+            {% else %}
+            <div class="study-unavailable-panel">
+                <p>The user study is currently unavailable because the database tables have not been created yet.</p>
+                <p>Once `sql/study_schema.sql` has been run in Supabase, this page will work without further code changes.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

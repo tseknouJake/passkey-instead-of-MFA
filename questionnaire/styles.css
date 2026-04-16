@@ -11,6 +11,26 @@ body {
   min-height: 100vh;
 }
 
+.dashboard-link {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10000;
+  border: 1px solid #00cfff;
+  color: #00cfff;
+  padding: 6px 16px;
+  text-decoration: none;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.dashboard-link:hover {
+  background: #00cfff;
+  color: #09090f;
+}
+
 /*SCANLINES*/
 body::before {
   content:'';
@@ -172,6 +192,14 @@ body::before {
 .logout-btn:hover {
   background: #ff3355;
   color: #09090f;
+}
+
+@media (max-width: 768px) {
+  .dashboard-link {
+    top: 14px;
+    left: 14px;
+    padding: 6px 12px;
+  }
 }
 
 /*LEVEL SELECT*/

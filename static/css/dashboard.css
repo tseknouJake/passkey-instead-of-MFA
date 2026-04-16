@@ -72,6 +72,93 @@ body {
     margin: 10px 0;
 }
 
+.study-summary {
+    margin-top: 24px;
+    padding: 20px;
+    background: #f7f8ff;
+    border-radius: 8px;
+}
+
+.study-status {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.study-complete {
+    color: #2f855a;
+}
+
+.study-pending {
+    color: #805ad5;
+}
+
+.study-unavailable {
+    color: #b45309;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    padding: 14px 24px;
+    border-radius: 8px;
+    border: none;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.primary-action {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 10px 24px rgba(102, 126, 234, 0.25);
+}
+
+.secondary-action {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.secondary-action:hover {
+    background: #f7f8ff;
+}
+
+.disabled-action,
+.disabled-action:hover {
+    background: #e5e7eb;
+    color: #6b7280;
+    border-color: #d1d5db;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+}
+
+.tertiary-action {
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 2px dashed #cbd5e1;
+}
+
+.tertiary-action:hover {
+    background: #e5e7eb;
+}
+
 .auth-badge {
     display: inline-block;
     padding: 10px 25px;
@@ -118,4 +205,21 @@ body {
 .feature-card p {
     color: #666;
     line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .user-info {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .action-btn {
+        width: 100%;
+    }
 }

@@ -99,6 +99,6 @@ def password_login():
             except ValueError:
                 pass
 
-        return redirect('/questionnaire')
+        return redirect(url_for('main.dashboard'))
 
     return render_template('login.html')
