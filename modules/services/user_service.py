@@ -5,14 +5,12 @@ This module abstracts all database interactions and ensures
 that encryption, hashing, and credential verification are handled consistently.
 """
 
-import json
 import logging
 import os
 from pathlib import Path
 
-import httpx
-
 from modules.database import supabase
+from modules.utils.storage_fallback import Storage
 from modules.utils.encryptor import (
     encrypt_data,
     hash_password,
@@ -22,103 +20,30 @@ from modules.utils.encryptor import (
 )
 
 logger = logging.getLogger(__name__)
-AUTH_STORAGE_BACKEND = (os.environ.get("AUTH_STORAGE_BACKEND") or "auto").strip().lower()
 LOCAL_USERS_FILE = Path(
     (os.environ.get("LOCAL_USERS_FILE") or Path(__file__).resolve().parents[2] / "users.json")
 ).expanduser()
-_fallback_logged = False
-
-
-def _log_local_fallback(reason: str) -> None:
-    """
-    Log the storage fallback once so local development failures stay visible
-    without spamming every request.
-    """
-    global _fallback_logged
-    if _fallback_logged:
-        return
-
-    logger.warning(
-        "Supabase unavailable; falling back to local user store at %s (%s)",
-        LOCAL_USERS_FILE,
-        reason,
-    )
-    _fallback_logged = True
-
-
-def _read_local_users() -> dict:
-    """
-    Load the local JSON user store.
-    """
-    if not LOCAL_USERS_FILE.exists():
-        return {}
-
-    try:
-        with LOCAL_USERS_FILE.open("r", encoding="utf-8") as handle:
-            data = json.load(handle)
-    except (OSError, json.JSONDecodeError):
-        logger.exception("Failed to read local user store from %s", LOCAL_USERS_FILE)
-        return {}
-
-    return data if isinstance(data, dict) else {}
-
-
-def _write_local_users(users: dict) -> None:
-    """
-    Persist the local JSON user store atomically.
-    """
-    LOCAL_USERS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = LOCAL_USERS_FILE.with_suffix(f"{LOCAL_USERS_FILE.suffix}.tmp")
-    with temp_path.open("w", encoding="utf-8") as handle:
-        json.dump(users, handle, indent=4)
-        handle.write("\n")
-    temp_path.replace(LOCAL_USERS_FILE)
+_storage = Storage(
+    path=LOCAL_USERS_FILE,
+    default={},
+    label="user store",
+    supabase_client=supabase,
+)
 
 
 def _get_local_user_record(username: str) -> dict | None:
     """
     Retrieve a local user record and attach the username field used by the app.
     """
-    user = _read_local_users().get(username)
+    user = _storage.read().get(username)
     if not isinstance(user, dict):
         return None
     return {"username": username, **user}
 
 
-def _use_local_store() -> bool:
-    """
-    Determine whether requests should use the local JSON store directly.
-    """
-    if AUTH_STORAGE_BACKEND == "file":
-        return True
-
-    if AUTH_STORAGE_BACKEND == "supabase":
-        return False
-
-    if supabase is None:
-        _log_local_fallback("Supabase configuration is missing")
-        return True
-
-    return False
-
-
-def _with_storage_fallback(remote_operation, local_operation):
-    """
-    Use Supabase when available and reachable, otherwise fall back to the local store.
-    """
-    if _use_local_store():
-        return local_operation()
-
-    try:
-        return remote_operation()
-    except httpx.RequestError as exc:
-        _log_local_fallback(str(exc))
-        return local_operation()
-
-
 def get_user(username: str) -> dict | None:
     """
-    Retrieve a user by username and decrypt non-password sensitive fields.
+    Retrieve a user from the database by username and decrypt non-password sensitive fields.
 
     Args:
         username (str): The username of the user.
@@ -133,7 +58,7 @@ def get_user(username: str) -> dict | None:
     def local_operation():
         return _get_local_user_record(username)
 
-    user = _with_storage_fallback(remote_operation, local_operation)
+    user = _storage.run(remote_operation, local_operation)
 
     if user:
         if user.get("mfa_secret"): #TODO: what is that and why?
@@ -187,15 +112,15 @@ def create_user(username: str, password: str) -> None:
         }).execute()
 
     def local_operation():
-        users = _read_local_users()
+        users = _storage.read()
         users[username] = {
             "password": password_hash,
             "mfa_secret": None,
             "passkey_credentials": []
         }
-        _write_local_users(users)
+        _storage.write(users)
 
-    _with_storage_fallback(remote_operation, local_operation)
+    _storage.run(remote_operation, local_operation)
 
 
 def update_user_password(username: str, password_value: str) -> None:
@@ -208,14 +133,14 @@ def update_user_password(username: str, password_value: str) -> None:
         }).eq("username", username).execute()
 
     def local_operation():
-        users = _read_local_users()
+        users = _storage.read()
         user = users.setdefault(username, {})
         user["password"] = password_value
         user.setdefault("mfa_secret", None)
         user.setdefault("passkey_credentials", [])
-        _write_local_users(users)
+        _storage.write(users)
 
-    _with_storage_fallback(remote_operation, local_operation)
+    _storage.run(remote_operation, local_operation)
 
 
 def verify_user_password(user: dict | None, candidate_password: str | None) -> bool:
@@ -252,14 +177,14 @@ def update_mfa_secret(username: str, secret: str) -> None:
         }).eq("username", username).execute()
 
     def local_operation():
-        users = _read_local_users()
+        users = _storage.read()
         user = users.setdefault(username, {})
         user["mfa_secret"] = encrypted_secret
         user.setdefault("password", None)
         user.setdefault("passkey_credentials", [])
-        _write_local_users(users)
+        _storage.write(users)
 
-    _with_storage_fallback(remote_operation, local_operation)
+    _storage.run(remote_operation, local_operation)
 
 
 def add_passkey_credential(username: str, credential: dict) -> None:
@@ -281,14 +206,14 @@ def add_passkey_credential(username: str, credential: dict) -> None:
         }).eq("username", username).execute()
 
     def local_operation():
-        users = _read_local_users()
+        users = _storage.read()
         local_user = users.setdefault(username, {})
         local_user["passkey_credentials"] = updated_credentials
         local_user.setdefault("password", None)
         local_user.setdefault("mfa_secret", None)
-        _write_local_users(users)
+        _storage.write(users)
 
-    _with_storage_fallback(remote_operation, local_operation)
+    _storage.run(remote_operation, local_operation)
 
 
 def add_email_credential(username: str, email: str) -> None:
@@ -305,32 +230,14 @@ def add_email_credential(username: str, email: str) -> None:
 
     def remote_operation():
         supabase.table("users").update({
-            "passkey_credentials": updated_credentials
+            "email": email
         }).eq("username", username).execute()
 
     def local_operation():
-        users = _read_local_users()
+        users = _storage.read()
         local_user = users.setdefault(username, {})
-        local_user["passkey_credentials"] = updated_credentials
+        local_user["email"] = email
         local_user.setdefault("password", None)
-        local_user.setdefault("mfa_secret", None)
-        _write_local_users(users)
+        _storage.write(users)
 
-    _with_storage_fallback(remote_operation, local_operation)
-
-
-def add_email_credential(username: str, email: str) -> None:
-    """
-    Add an email credential to a user's stored credentials.
-
-    Args:
-        username (str): The username.
-        email (str): The user's email address.
-
-    Authors:
-        | Leah Goldin
-    """
-
-    supabase.table("users").update({
-        "email": email
-    }).eq("username", username).execute()
+    _storage.run(remote_operation, local_operation)
