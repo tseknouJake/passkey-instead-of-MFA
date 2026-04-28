@@ -7,8 +7,27 @@ authentication and access control.
 
 from functools import wraps
 from flask import session, redirect, url_for
-
+from modules.database import supabase
+from modules.utils.storage_fallback import Storage
+from pathlib import Path
+import os
 import time
+
+
+import logging
+from logging.handlers import RotatingFileHandler
+
+metrics_logger = logging.getLogger("login_metrics")
+metrics_logger.setLevel(logging.INFO)
+
+handler = RotatingFileHandler("login_metrics.log", maxBytes=1_000_000, backupCount=3)
+handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+metrics_logger.addHandler(handler)
+
+LOCAL_LOG = Path(
+    os.environ.get("LOCAL_LOG") or Path(__file__).resolve().parents[2] / "login_metrics.log"
+).expanduser()
+_storage = Storage(path=LOCAL_LOG, label="login metrics", supabase_client=supabase)
 
 login_time = None
 login_method = None
@@ -83,8 +102,26 @@ def complete_login_timer(f):
             now = time.time()
             elapsed = now - login_time
 
-            with open("log.txt", "a") as file:
-                _ = file.write(f"login method: {login_method}, time elapsed: {elapsed}, user: {session['username']}, failed logins: {failed_logins}\n")
+            metric = {
+                "login_method": login_method,
+                "time_elapsed": elapsed,
+                "user_name": session["username"],
+                "failed_logins": failed_logins,
+            }
+
+            def remote_operation():
+                supabase.table("login_metrics").insert(metric).execute()
+
+            def local_operation():
+                metrics_logger.info(
+                    "method=%s elapsed=%.4f user=%s failed=%d",
+                    metric["login_method"],
+                    metric["time_elapsed"],
+                    metric["user_name"],
+                    metric["failed_logins"],
+                )
+
+            _storage.run(remote_operation, local_operation)
 
             login_time = None
 
