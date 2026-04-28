@@ -2,7 +2,6 @@ log.txt
 .idea/
 study_data.json
 login_metrics.log
-users.json
 /.env
 __pycache__/
 *.pyc
