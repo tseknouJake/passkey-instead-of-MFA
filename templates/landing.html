@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthLab — Research Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="glow-orb top-left"></div>
+    <div class="glow-orb bottom-right"></div>
+
+    <div class="container">
+        <header class="header">
+            <div class="badge">Research Platform v0.1</div>
+            <h1>AuthLab<span class="cursor"></span></h1>
+            <span class="title-accent">Authentication Methods Study</span>
+        </header>
+
+        <div class="panel">
+            <div class="section-label">// About this study</div>
+
+            <p class="intro-text">
+                Welcome to <strong>AuthLab</strong>, a university research platform comparing modern authentication methods.
+                This study explores the <strong>usability, security, and user experience</strong> of four login flows
+                commonly used across the web. Your responses will be used for academic research purposes only.
+            </p>
+
+            <div class="divider"></div>
+
+            <div class="section-label">// Before you begin</div>
+
+            <div class="prerequisite-box">
+                <span class="prereq-icon">📱</span>
+                <p class="intro-text" style="margin-bottom: 0;">
+                    The MFA method requires a <strong>TOTP authenticator app</strong> on your mobile device.
+                    Please install <strong>Google Authenticator</strong> (free on iOS &amp; Android) before starting.
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-label">// How to participate</div>
+
+            <ol class="instructions">
+                <li>
+                    <span class="step-title">Create an account</span>
+                    <span class="step-desc">Register with a username and password. This single account is used across all four authentication methods.
+                    We suggest against reusing credentials that you have used previously on other platforms.</span>
+                </li>
+                <li>
+                    <span class="step-title">Set up all authentication methods</span>
+                    <span class="step-desc">After registering, complete the one-time setup for each method: MFA (TOTP), Passkey, and Google login.</span>
+                </li>
+                <li>
+                    <span class="step-title">Log in using each method, one at a time</span>
+                    <span class="step-desc">Return to the login page and authenticate using the first method. After a successful login you will be taken to your dashboard.</span>
+                </li>
+                <li>
+                    <span class="step-title">Complete the survey</span>
+                    <span class="step-desc">After each login, fill in the short questionnaire about that method. Answer based on that specific experience. This takes about 2–3 minutes.</span>
+                </li>
+                <li>
+                    <span class="step-title">Log out and repeat</span>
+                    <span class="step-desc">Log out, then log back in using the next method. Repeat until you have completed all four methods and their surveys.</span>
+                </li>
+                <li>
+                    <span class="step-title">Optional: Security training</span>
+                    <span class="step-desc">A security awareness simulation is available from your dashboard at any time. This is entirely optional and does not affect your survey responses.</span>
+                </li>
+            </ol>
+
+            <div class="divider"></div>
+
+            <div class="section-label">// Get started</div>
+
+            <div class="cta-section">
+                <a href="{{ url_for('auth_classic.register') }}" class="btn btn-primary">
+                    Create Account
+                    <span class="btn-label">New participant</span>
+                </a>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                    Log In
+                    <span class="btn-label">Returning user</span>
+                </a>
+            </div>
+        </div>
+
+        <footer class="footer">
+            Session encrypted &nbsp;·&nbsp; <span>TLS 1.3</span> &nbsp;·&nbsp; No tracking
+        </footer>
+    </div>
+</body>
+</html>

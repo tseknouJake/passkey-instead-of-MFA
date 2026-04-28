@@ -57,6 +57,34 @@ p {
     line-height: 1.8;
 }
 
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #4a7a60;
+    border: 1px solid #1a2a1f;
+    transition: all 0.2s;
+    margin-bottom: 32px;
+}
+
+.back-btn:hover {
+    color: #00ff88;
+    border-color: rgba(0, 255, 136, 0.35);
+    background: rgba(0, 255, 136, 0.04);
+}
+
+.back-btn::before {
+    content: '←';
+    font-size: 0.8rem;
+}
+
 .auth-options {
     display: grid;
     grid-template-columns: 1fr 1fr;
