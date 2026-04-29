@@ -157,18 +157,18 @@ body::before {
 
 .actions {
     display: flex;
-    justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-top: 30px;
+    flex-direction: column;
+    align-items: center;
+    gap: 70px; 
+    margin-top: 40px;
 }
 
 .action-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 200px;
-    padding: 12px 24px;
+    width: min(300px, 100%);
+    /* padding: 15px 24px; */
     border: none;
     text-decoration: none;
     font-family: 'Share Tech Mono', monospace;
@@ -180,24 +180,27 @@ body::before {
     transition: all 0.2s;
 }
 
-.primary-action {
+.secondary-action {
     background: #00ff88;
     color: #09090f;
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.4);
+    padding: 18px 32px;      
+    font-size: 1rem;  
 }
 
-.primary-action:hover {
+.secondary-action:hover {
     box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
     transform: translateY(-2px);
 }
 
-.secondary-action {
+.primary-action {
     background: none;
     color: #00cfff;
-    border: 1px solid #00cfff;
+    padding: 8px 16px;
+    margin-top: 10px;        
 }
 
-.secondary-action:hover {
+.primary-action:hover {
     background: #00cfff;
     color: #09090f;
     box-shadow: 0 0 20px rgba(0, 207, 255, 0.3);
@@ -223,6 +226,20 @@ body::before {
 .tertiary-action:hover {
     border-color: #4a7a60;
     color: #d0ffe8;
+}
+
+.optional-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.optional-tag {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: #4a7a60;
+    text-transform: uppercase;
 }
 
 .auth-badge {

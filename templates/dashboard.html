@@ -44,11 +44,17 @@
             </div>
 
             <div class="actions">
-                <a href="{{ url_for('main.questionnaire') }}" class="action-btn primary-action">Simulation</a>
-                {% if study_available %}
                 <a href="{{ url_for('study.user_study') }}" class="action-btn secondary-action">User Study</a>
-                {% else %}
-                <button type="button" class="action-btn secondary-action disabled-action" disabled>User Study Unavailable</button>
+                {% if study_available %}
+                <!-- <a href="{{ url_for('main.questionnaire') }}" class="action-btn primary-action">Simulation</a> -->
+                <div class="optional-wrapper">
+                    <span class="optional-tag">Optional: only perform this when you have done the User Study </span>
+                    <a href="{{ url_for('main.questionnaire') }}" class="action-btn primary-action">
+                        Simulation
+                    </a>
+                </div>
+                <!-- {% else %}
+                <button type="button" class="action-btn secondary-action disabled-action" disabled>User Study Unavailable</button> -->
                 {% endif %}
             </div>
         </div>
