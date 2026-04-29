@@ -78,10 +78,33 @@
                             {% endfor %}
                         </select>
                     </div>
+
+
+                    <div class="field">
+    <label>Do you use a password manager?</label>
+    <div class="choice-row">
+        {% for value, label in used_password_manager_options %}
+        <label class="choice-chip">
+            <input
+                type="radio"
+                name="password_manager"
+                value="{{ value }}"
+                {% if form_data.get('password_manager') == value %}checked{% endif %}
+                required
+            >
+            <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+    </div>
+</div>
+
+
                 </section>
 
                 <section class="form-section">
                     <h2>Experience With This Method</h2>
+
+
 
                     <div class="field">
                         <label>Had you used this login method before today?</label>

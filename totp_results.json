@@ -1,0 +1,11 @@
+{
+  "mode": "enumerate",
+  "url": "https://127.0.0.1:5001/auth/verify-mfa",
+  "findings": [
+    {
+      "type": "enumeration_success",
+      "code": "299753"
+    }
+  ],
+  "generated": "2026-04-05T21:18:48.235035+00:00"
+}

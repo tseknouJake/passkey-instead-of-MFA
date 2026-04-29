@@ -17,6 +17,7 @@ from modules.services.study_service import (
     get_study_response,
     save_study_profile,
     save_study_response,
+    USE_PASSWORD_MANAGER
 )
 from modules.utils.decorators import login_required
 
@@ -37,6 +38,7 @@ def _validate_study_submission(form) -> tuple[dict, dict, str | None]:
     gender = (form.get("gender") or "").strip()
     technical_expertise_raw = (form.get("technical_expertise") or "").strip()
     used_before = (form.get("used_before") or "").strip()
+    used_password_manager = (form.get("password_manager") or "").strip()
     additional_feedback = (form.get("additional_feedback") or "").strip()
 
     form_data = {
@@ -44,6 +46,7 @@ def _validate_study_submission(form) -> tuple[dict, dict, str | None]:
         "gender": gender,
         "technical_expertise": technical_expertise_raw,
         "used_before": used_before,
+        "password_manager": used_password_manager,
         "additional_feedback": additional_feedback,
     }
 
@@ -69,6 +72,10 @@ def _validate_study_submission(form) -> tuple[dict, dict, str | None]:
 
     response_data = {"used_before": used_before == "yes", "additional_feedback": additional_feedback}
 
+    if used_password_manager not in {"yes", "no"}:
+        return {}, form_data, "Used password manager must be either 'yes' or 'no'."
+
+
     for key, _label in LIKERT_QUESTIONS:
         raw_value = (form.get(key) or "").strip()
         form_data[key] = raw_value
@@ -87,6 +94,7 @@ def _validate_study_submission(form) -> tuple[dict, dict, str | None]:
             "age": age,
             "gender": gender,
             "technical_expertise": technical_expertise,
+            "use_password_manager": used_password_manager,
         },
         "response": response_data,
     }
@@ -118,6 +126,7 @@ def user_study():
             technical_expertise_options=TECHNICAL_EXPERTISE_OPTIONS,
             gender_options=GENDER_OPTIONS,
             used_before_options=USED_BEFORE_OPTIONS,
+            used_password_manager_options=USE_PASSWORD_MANAGER,
             completed=False,
             study_available=False,
             study_error=str(exc),
@@ -137,6 +146,7 @@ def user_study():
                 technical_expertise_options=TECHNICAL_EXPERTISE_OPTIONS,
                 gender_options=GENDER_OPTIONS,
                 used_before_options=USED_BEFORE_OPTIONS,
+                used_password_manager_options=USE_PASSWORD_MANAGER,
                 completed=response is not None,
                 study_available=True,
                 study_error=None,
@@ -157,6 +167,7 @@ def user_study():
                 technical_expertise_options=TECHNICAL_EXPERTISE_OPTIONS,
                 gender_options=GENDER_OPTIONS,
                 used_before_options=USED_BEFORE_OPTIONS,
+                used_password_manager_options=USE_PASSWORD_MANAGER,
                 completed=response is not None,
                 study_available=False,
                 study_error=str(exc),
@@ -175,6 +186,7 @@ def user_study():
         technical_expertise_options=TECHNICAL_EXPERTISE_OPTIONS,
         gender_options=GENDER_OPTIONS,
         used_before_options=USED_BEFORE_OPTIONS,
+        used_password_manager_options=USE_PASSWORD_MANAGER,
         completed=response is not None,
         study_available=True,
         study_error=None,

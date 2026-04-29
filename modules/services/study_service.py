@@ -68,6 +68,11 @@ USED_BEFORE_OPTIONS = [
     ("no", "No"),
 ]
 
+USE_PASSWORD_MANAGER = [
+    ("yes", "Yes"),
+    ("no", "No"),
+]
+
 _fallback_logged = False
 
 
@@ -194,11 +199,13 @@ def get_study_profile(username: str) -> dict | None:
 
 
 def save_study_profile(username: str, profile_data: dict) -> None:
+    print("tf is worng" + profile_data["use_password_manager"])
     payload = {
         "username": username,
         "age": profile_data["age"],
         "gender": profile_data["gender"],
         "technical_expertise": profile_data["technical_expertise"],
+        "use_password_manager": profile_data["use_password_manager"],
         "updated_at": _utc_now(),
     }
 
