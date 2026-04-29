@@ -18,7 +18,6 @@ body {
     padding: 20px;
 }
 
-/* CRT scanline overlay */
 body::before {
     content: '';
     position: fixed;
@@ -34,7 +33,6 @@ body::before {
     z-index: 9999;
 }
 
-/* Animated grid background */
 .grid-bg {
     position: fixed;
     inset: 0;
@@ -53,7 +51,6 @@ body::before {
     }
 }
 
-/* Ambient glow blobs */
 .glow-orb {
     position: fixed;
     border-radius: 50%;
@@ -96,7 +93,6 @@ body::before {
     }
 }
 
-/* ── Header ── */
 .header {
     text-align: center;
     margin-bottom: 56px;
@@ -139,7 +135,6 @@ h1 {
     animation: fadeUp 0.8s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Content panel ── */
 .panel {
     background: rgba(9, 9, 15, 0.8);
     border: 1px solid #1a2a1f;
@@ -148,7 +143,6 @@ h1 {
     animation: fadeUp 0.8s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Corner accents */
 .panel::before,
 .panel::after {
     content: '';
@@ -308,7 +302,6 @@ ol.instructions li::before {
     margin: 32px 0;
 }
 
-/* ── CTA buttons ── */
 .cta-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -374,22 +367,40 @@ ol.instructions li::before {
     font-weight: normal;
 }
 
-/* ── Footer ── */
-.footer {
-    text-align: center;
-    margin-top: 28px;
-    color: #2a4a35;
-    font-size: 0.62rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    animation: fadeUp 0.8s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+.github-link:hover .github-link-arrow {
+    transform: translate(2px, -2px);
+}
+
+.site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.5rem 0 2rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.04em;
+}
+
+.site-footer a {
+    color: rgba(0, 255, 180, 0.45);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.site-footer a:hover {
+    color: rgba(0, 255, 180, 0.8);
+}
+
+.footer-sep {
+    opacity: 0.3;
 }
 
 .footer span {
     color: #00ff88;
 }
 
-/* Blinking cursor */
 .cursor {
     display: inline-block;
     width: 8px;
