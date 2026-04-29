@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AuthLab — Research Platform</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <div class="grid-bg"></div>
     <div class="glow-orb top-left"></div>
@@ -23,10 +26,13 @@
             <div class="section-label">// About this study</div>
 
             <p class="intro-text">
-                Welcome to <strong>AuthLab</strong>, a university research platform comparing modern authentication methods.
+                Welcome to <strong>AuthLab</strong>, a university research platform comparing modern authentication
+                methods.
                 This study explores the <strong>usability, security, and user experience</strong> of four login flows
                 commonly used across the web. Your responses will be used for academic research purposes only.
             </p>
+            <p class="intro-text"> Don't worry! All passwords are hashed, encrypted and stored safely so we won't even
+                have access to your credentials.</p>
 
             <div class="divider"></div>
 
@@ -36,7 +42,8 @@
                 <span class="prereq-icon">📱</span>
                 <p class="intro-text" style="margin-bottom: 0;">
                     The MFA method requires a <strong>TOTP authenticator app</strong> on your mobile device.
-                    Please install <strong>Google/Microsoft Authenticator</strong> (free on iOS &amp; Android) before starting.
+                    Please install <strong>Google/Microsoft Authenticator</strong> (free on iOS &amp; Android) before
+                    starting.
                 </p>
             </div>
 
@@ -47,20 +54,24 @@
             <ol class="instructions">
                 <li>
                     <span class="step-title">Create an account</span>
-                    <span class="step-desc">Register with a username and password. This single account is used across all four authentication methods.
-                    We suggest against reusing credentials that you have used previously on other platforms.</span>
+                    <span class="step-desc">Register with a username and password. This single account is used across
+                        all four authentication methods.
+                        We suggest against reusing credentials that you have used previously on other platforms.</span>
                 </li>
                 <li>
                     <span class="step-title">Set up an authentication method of your choice</span>
-                    <span class="step-desc">After registering, complete the one-time setup for one of the methods: MFA (TOTP), Passkey, and Google login.</span>
+                    <span class="step-desc">After registering, complete the one-time setup for one of the methods: MFA
+                        (TOTP), Passkey, and Google login.</span>
                 </li>
                 <li>
                     <span class="step-title">First, log in using the old-fashioned username and password</span>
-                    <span class="step-desc">Return to the login page and authenticate using the username and password. After a successful login you will be taken to your dashboard.</span>
+                    <span class="step-desc">Return to the login page and authenticate using the username and password.
+                        After a successful login you will be taken to your dashboard.</span>
                 </li>
                 <li>
                     <span class="step-title">Complete the survey</span>
-                    <span class="step-desc">After the login, fill in the short questionnaire about that method. Answer based on that specific experience. This takes about 2–3 minutes.</span>
+                    <span class="step-desc">After the login, fill in the short questionnaire about that method. Answer
+                        based on that specific experience. This takes about 2–3 minutes.</span>
                 </li>
                 <li>
                     <span class="step-title">Log out and choose at least one more authentication method</span>
@@ -68,11 +79,13 @@
                 </li>
                 <li>
                     <span class="step-title">Additionally: Complete other authentication methods</span>
-                    <span class="step-desc">It would really help us in our research if you could complete the other remaining methods by repeating the steps above</span>
+                    <span class="step-desc">It would really help us in our research if you could complete the other
+                        remaining methods by repeating the steps above</span>
                 </li>
                 <li>
                     <span class="step-title">Optional: Security training</span>
-                    <span class="step-desc">A security awareness simulation is available from your dashboard at any time. This is entirely optional and does not affect your survey responses.</span>
+                    <span class="step-desc">A security awareness simulation is available from your dashboard at any
+                        time. This is entirely optional and does not affect your survey responses.</span>
                 </li>
             </ol>
 
@@ -94,4 +107,5 @@
 
     </div>
 </body>
+
 </html>
