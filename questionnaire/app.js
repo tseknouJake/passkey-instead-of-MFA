@@ -30,7 +30,6 @@ const levels = [
           { text: "Type a wrong password first to see if it rejects it", correct: false, failMsg: "Fake login pages are set up to always say wrong password the first time — they want you to try again with your real one. Even entering a wrong password tells the attacker your username. Do not type anything on a page you are not sure about." },
         ],
         pass: "Good instinct. The web address at the top of the browser is the one thing scammers cannot fake — it will always be different from the real site. If the address does not match the official website you know, close the tab immediately.",
-        usabilityQuestion: "How easy did you find using a regular password to log in day-to-day?",
       },
       {
         eyebrow: "SCENARIO 2 · PASSWORD LOGIN",
@@ -49,7 +48,6 @@ const levels = [
           { text: "A random mix of letters, numbers and symbols that does not spell anything", correct: true },
         ],
         pass: "Exactly. A random password that does not spell any word or follow any pattern is the only kind that is truly safe from this kind of attack. A password manager can generate and remember these for you so you do not have to.",
-        usabilityQuestion: "How easy did you find remembering and using passwords in general?",
         hasBfAnim: true,
       },
     ]
@@ -86,7 +84,6 @@ const levels = [
           { text: "Try logging into your accounts to see if your password still works", correct: false, failMsg: "If someone has your texts, they also have any login codes sent to you. Logging in right now might trigger a code being sent — which goes straight to the attacker. Call your phone company first before doing anything else." },
         ],
         pass: "Right move. Sudden loss of signal out of nowhere is a warning sign worth taking seriously. A quick call to your phone company can confirm whether your number is still on your SIM or if someone moved it.",
-        usabilityQuestion: "How convenient did you find getting a text code to log in?",
       },
       {
         eyebrow: "SCENARIO 2 · TWO-FACTOR AUTH",
@@ -109,7 +106,6 @@ const levels = [
           { text: "Hang up — nobody should ever ask you for your login code, not even IT support", correct: true },
         ],
         pass: "Correct. This is called social engineering — tricking people into handing over security codes by pretending to be someone trusted. The rule is simple: your login code is only for you to type in when you are logging in. Nobody else should ever ask for it.",
-        usabilityQuestion: "How easy did you find using an authenticator app for your login codes?",
       },
     ]
   },
@@ -147,7 +143,6 @@ const levels = [
           { text: "The fake site did not have a padlock icon so the browser blocked it", correct: false, failMsg: "Fake sites can and often do have a padlock — it just means the connection is encrypted, not that the site is trustworthy. The real protection is that your passkey is registered to a specific website address. If the address does not match exactly, your phone will not log you in." },
         ],
         pass: "Exactly. Your passkey is linked to the exact website address you registered it on. Your phone checks this automatically every time. Even if you click a scam link by mistake, your phone will simply refuse — there is nothing for the scammer to steal.",
-        usabilityQuestion: "How easy did you find the idea of logging in with just your fingerprint or face?",
       },
       {
         eyebrow: "SCENARIO 2 · PASSKEY LOGIN",
@@ -170,7 +165,6 @@ const levels = [
           { text: "The account got locked after too many wrong attempts", correct: false, failMsg: "Account lockouts help with passwords, but the reason here is more fundamental — passkeys remove the password entirely. The attacker can try as many times as they want and it still will not work because there is no password to be right about." },
         ],
         pass: "Right. Switching to a passkey means the password is gone entirely — not just changed to something stronger, but completely removed. There is nothing left to steal, guess, or leak from a data breach. Your physical device is the only way in.",
-        usabilityQuestion: "Overall, how would you feel about switching to passkeys instead of passwords?",
       },
     ]
   }
@@ -247,7 +241,6 @@ function loadScenario() {
   document.getElementById('sim-content').innerHTML = sc.sim;
   document.getElementById('choice-prompt').textContent = sc.prompt;
   document.getElementById('result-panel').style.display = 'none';
-  document.getElementById('usability-section').classList.remove('visible');
   document.getElementById('next-btn').style.display = '';
 
   // Build choices
@@ -333,46 +326,6 @@ async function runBfAnim() {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// USABILITY RATINGS
-let currentRating = 0;
-let usabilityRatings = [];
-
-function selectRating(val) {
-  currentRating = val;
-  document.querySelectorAll('.rating-btn').forEach((b, i) => {
-    b.classList.toggle('selected', i + 1 === val);
-  });
-  document.getElementById('rating-submit').disabled = false;
-}
-
-function confirmRating() {
-  usabilityRatings.push({
-    level: levels[currentLevel].label,
-    scenario: currentScenario + 1,
-    question: levels[currentLevel].scenarios[currentScenario].usabilityQuestion,
-    rating: currentRating,
-  });
-  document.getElementById('usability-section').classList.remove('visible');
-  document.getElementById('next-btn').style.display = '';
-  currentRating = 0;
-  nextScenario();
-}
-
-function submitRating() {
-  const sc = levels[currentLevel].scenarios[currentScenario];
-  if (sc.usabilityQuestion) {
-    document.getElementById('usability-q').textContent = sc.usabilityQuestion;
-    document.getElementById('usability-section').classList.add('visible');
-    document.getElementById('next-btn').style.display = 'none';
-    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
-    document.getElementById('rating-submit').disabled = true;
-    document.getElementById('usability-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  } else {
-    nextScenario();
-  }
-}
-
-
 function showLevelResults() {
   const level = levels[currentLevel];
   const passed = sessionResults.filter(Boolean).length;
@@ -397,7 +350,6 @@ function showLevelResults() {
   grid.innerHTML = '';
   level.scenarios.forEach((sc, i) => {
     const pass = sessionResults[i];
-    const rating = usabilityRatings.find(r => r.scenario === i + 1);
     const div = document.createElement('div');
     div.className = 'result-row ' + (pass ? 'pass' : 'fail');
     div.innerHTML = `
