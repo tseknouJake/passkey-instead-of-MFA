@@ -1,7 +1,7 @@
 """
 Main application routes.
 
-Handles general navigation such as landing page,
+Handles general navigation such as landing page, index page,
 dashboard, and logout.
 """
 
@@ -17,12 +17,32 @@ main = Blueprint('main', __name__)
 
 
 @main.route('/')
-@cancel_login_timer
-def index():
+def landing():
     """
     Landing page.
 
     Redirects authenticated users to the dashboard.
+
+    Authors:
+        | Leah Goldin
+    """
+    if is_authenticated():
+        return redirect(url_for('main.dashboard'))
+    return render_template('landing.html')
+
+
+@main.route('/index')
+@cancel_login_timer
+def index():
+    """
+    Index page.
+
+    Displays available authentication methods for the user to choose from.
+    Redirects authenticated users to the dashboard.
+
+    Authors:
+        | Leah Goldin
+        | Jake Lockitch
     """
     if is_authenticated():
         return redirect(url_for('main.dashboard'))

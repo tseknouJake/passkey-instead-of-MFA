@@ -8,6 +8,8 @@
 </head>
 <body>
     <div class="container">
+        <a href="{{ url_for('main.landing') }}" class="back-btn">Back</a>
+
         <h1>Authentication Comparison</h1>
         <p class="subtitle">Choose your authentication method</p>
 
@@ -16,7 +18,6 @@
                 <div class="auth-icon">📱</div>
                 <h2>MFA Login</h2>
                 <p>Multi-Factor Authentication with TOTP</p>
-                </ul>
                 <a href="{{ url_for('auth_otp.mfa_login') }}" class="btn">Login with MFA</a>
             </div>
 
@@ -40,12 +41,6 @@
                 <p>Normal login with no additional security</p>
                 <a href="{{ url_for('auth_classic.password_login') }}" class="btn">Login with Password</a>
             </div>
-        </div>
-
-        <div class="register-section">
-            <h3>New User?</h3>
-            <p>Create an account and try different authentication methods</p>
-            <a href="{{ url_for('auth_classic.register') }}" class="register-btn">Create Account</a>
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
