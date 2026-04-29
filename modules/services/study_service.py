@@ -130,7 +130,6 @@ def get_study_profile(username: str) -> dict | None:
 
 
 def save_study_profile(username: str, profile_data: dict) -> None:
-    print("tf is worng" + profile_data["use_password_manager"])
     payload = {
         "username": username,
         "age": profile_data["age"],
@@ -174,7 +173,6 @@ def get_study_response(username: str, auth_method: str) -> dict | None:
         return response.data[0] if response.data else None
 
     def local_operation():
-        # return _read_local_study_data()["responses"].get(_response_key(username, auth_method))
         return _storage.read()["responses"].get(_response_key(username, auth_method))
 
     return _storage.run(remote_operation, local_operation)
