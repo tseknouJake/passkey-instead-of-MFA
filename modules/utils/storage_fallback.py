@@ -28,6 +28,7 @@ class Storage:
             path=LOCAL_USERS_FILE,
             default={},
             label="user store",
+            supabase_client=supabase
         )
 
         data = _storage.read()
