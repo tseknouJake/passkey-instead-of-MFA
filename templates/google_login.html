@@ -21,15 +21,6 @@
         {% else %}
         <button type="button" class="disabled-btn" disabled>Google Login Unavailable</button>
         {% endif %}
-        <div class="info">
-            <p>Login securely using your Google account.</p>
-            {% if callback_uri %}
-            <p>Authorized redirect URI must include: <code>{{ callback_uri }}</code></p>
-            {% endif %}
-            {% if not oauth_available %}
-            <p>Install dependencies: <code>python3 -m pip install -r requirements.txt</code></p>
-            {% endif %}
-        </div>
     </div>
 </body>
 </html>
