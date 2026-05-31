@@ -1,4 +1,10 @@
-encryption.key
+log.txt
+.idea/
+study_data.json
+login_metrics.log
 users.json
 /.env
 totp_results.json
+__pycache__/
+*.pyc
+

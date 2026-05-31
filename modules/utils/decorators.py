@@ -5,12 +5,130 @@ This module contains reusable decorators for handling
 authentication and access control.
 """
 
-# TODO: @Enna add a time measuring feature that will be reused in all the routes and will log all the data in some
-# kind of log file (can be txt for now)
-
 from functools import wraps
 from flask import session, redirect, url_for
+from modules.database import supabase
+from modules.utils.storage_fallback import Storage
+from pathlib import Path
+import os
+import time
 
+
+import logging
+from logging.handlers import RotatingFileHandler
+
+metrics_logger = logging.getLogger("login_metrics")
+metrics_logger.setLevel(logging.INFO)
+
+handler = RotatingFileHandler("login_metrics.log", maxBytes=1_000_000, backupCount=3)
+handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+metrics_logger.addHandler(handler)
+
+LOCAL_LOG = Path(
+    os.environ.get("LOCAL_LOG") or Path(__file__).resolve().parents[2] / "login_metrics.log"
+).expanduser()
+_storage = Storage(path=LOCAL_LOG, label="login metrics", supabase_client=supabase)
+
+login_time = None
+login_method = None
+failed_logins = 0
+
+def increment_failed_login():
+    """
+    Counts how many times the user failed to log in.
+
+    Authors:
+    | Enna Pirvu
+    """
+    global failed_logins
+    failed_logins += 1
+
+def start_login_timer(f):
+    """
+    Starts the timer and tracks username, method of login and number of failed attempts.
+    This starts every time a new method is chosen. Registering a passkey is not counted as a method despite it taking you to the questionare.
+
+    Authors:
+    | Enna Pirvu
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+
+        if not login_time:
+            login_time = time.time()
+            login_method = f.__name__
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def cancel_login_timer(f):
+    """
+    Resets the login data without writing anything to the text file.
+    This happens when backing out of a login or when registering a new passkey.
+
+    Authors:
+    | Enna Pirvu
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+        global failed_logins
+
+        failed_logins = 0
+        login_time = None
+        login_method = None
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def complete_login_timer(f):
+    """
+    Writes all the gatered data into a text file in the current directory.
+    This runs whenever a login process is completed and the user is taken to the questionare, with the exception of registering.
+
+    Authors:
+    | Enna Pirvu
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global login_time
+        global login_method
+        global failed_logins
+
+        if login_time:
+            now = time.time()
+            elapsed = now - login_time
+
+            metric = {
+                "login_method": login_method,
+                "time_elapsed": elapsed,
+                "user_name": session["username"],
+                "failed_logins": failed_logins,
+            }
+
+            def remote_operation():
+                supabase.table("login_metrics").insert(metric).execute()
+
+            def local_operation():
+                metrics_logger.info(
+                    "method=%s elapsed=%.4f user=%s failed=%d",
+                    metric["login_method"],
+                    metric["time_elapsed"],
+                    metric["user_name"],
+                    metric["failed_logins"],
+                )
+
+            _storage.run(remote_operation, local_operation)
+
+            login_time = None
+
+        failed_logins = 0
+
+        return f(*args, **kwargs)
+    return decorated_function
 
 def login_required(f):
     """

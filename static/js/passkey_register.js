@@ -60,7 +60,7 @@ async function registerPasskey() {
 
         if (result.success) {
             msg.innerHTML = '<div class="success">✅ Success! Redirecting...</div>';
-            setTimeout(() => window.location.href = '/questionnaire', 1500);
+            setTimeout(() => window.location.href = '/dashboard', 1500);
         } else {
             throw new Error('Verification failed');
         }

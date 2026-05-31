@@ -79,7 +79,7 @@ form.addEventListener('submit', async (e) => {
 
         if (result.success) {
             messageDiv.innerHTML = '<div class="success">Login successful! Redirecting...</div>';
-            setTimeout(() => window.location.href = '/questionnaire', 1000);
+            setTimeout(() => window.location.href = '/dashboard', 1000);
         } else {
             throw new Error('Authentication failed');
         }

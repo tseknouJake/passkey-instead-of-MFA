@@ -9,6 +9,7 @@ from .auth_classic import auth_classic
 from .auth_otp import auth_otp
 from .auth_passkey import auth_passkey
 from .auth_social import auth_social
+from .study import study
 
 def register_routes(app):
     """
@@ -23,3 +24,4 @@ def register_routes(app):
     app.register_blueprint(auth_otp)
     app.register_blueprint(auth_passkey)
     app.register_blueprint(auth_social)
+    app.register_blueprint(study)

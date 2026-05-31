@@ -1,0 +1,13 @@
+{
+    "f": {
+        "password": "gAAAAABpiwkgXWpOAldBcxtrNkCFapOGmrds9nlqqR3mX1_QWf9-RQlSUVrQTIezTPAvfhv4sjik0m8A7_neGHdby9WOc1QHhw==",
+        "mfa_secret": null,
+        "passkey_credentials": [
+            {
+                "id": "OwvtZH0scJgTA6sMOUmJCs_Mt9Guh9_aLStrh4jWy-Q",
+                "rawId": "OwvtZH0scJgTA6sMOUmJCs_Mt9Guh9_aLStrh4jWy-Q",
+                "type": "public-key"
+            }
+        ]
+    }
+}
