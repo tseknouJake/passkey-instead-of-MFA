@@ -56,14 +56,21 @@ def set_auth(session, token, cookie, header_name):
 def load_lines(path):
     """
     Parses text file and strips garbage and metadata
-    Ignores white lines
+    Ignores white lines and duplicates and converts the file to lower case
     Args:
         path (str): path to file
     Returns:
         list of str: cleaned list of lines
     """
+    seen = set()
+    result = []
     with open(path, "r", errors="replace") as f:
-        return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+        for line in f:
+            line = line.strip().lower()
+            if line and not line.startswith("#") and line not in seen:
+                seen.add(line)
+                result.append(line)
+        return result
 
 
 def wordlist_attack(session, url, usernames, passwords,
@@ -259,8 +266,8 @@ def main():
     parser.add_argument("--header-name",   default=None)
 
 
-    parser.add_argument("--workers",       type=int,   default=5,
-                        help="Concurrent threads 5")
+    parser.add_argument("--workers",       type=int,   default=10,
+                        help="Concurrent threads 10")
     parser.add_argument("--delay",         type=float, default=0.0,
                         help="Seconds to sleep between requests (default: 0)")
     parser.add_argument("--fail-on-lock",  action="store_true",
