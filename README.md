@@ -159,6 +159,10 @@ passkey-instead-of-MFA/
 ├── package-lock.json           # Node dependencies lockfile
 ├── README.md                   # Project documentation
 ├── requirements.txt            # Python dependencies
+├── sql/                        # Database schema
+│   ├── login_metrics.sql       # Login metrics log table
+│   ├── study_schema.sql        # User study related tables
+│   ├── users.sql               # Users table
 ├── modules/                    # Application logic
 │   ├── database.py             # Database models and connection setup
 │   ├── routes/                 # Flask blueprint route definitions
