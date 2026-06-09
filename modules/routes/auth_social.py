@@ -22,6 +22,10 @@ auth_social = Blueprint('auth_social', __name__, url_prefix='/auth')
 def google_login_page():
     """
     Render the Google login page with configuration status.
+
+    Authors:
+    -  Irina Vilcu
+    -  Leah Goldin
     """
     oauth_error = get_google_oauth_error(current_app)
 
@@ -37,6 +41,10 @@ def google_login_page():
 def login_google():
     """
     Redirect user to Google OAuth provider.
+
+    Authors:
+    -  Irina Vilcu
+    -  Leah Goldin
     """
     oauth_error = get_google_oauth_error(current_app)
     if oauth_error:
@@ -57,8 +65,8 @@ def google_callback():
     Handle Google OAuth callback and log the user in.
 
     Authors:
-        | Irina Vilcu
-        | Leah Goldin
+    -  Irina Vilcu
+    -  Leah Goldin
     """
     oauth_error = get_google_oauth_error(current_app)
     if oauth_error:
@@ -145,10 +153,10 @@ def set_up_password():
         Handle password setup for users registering via social login.
 
         Authors:
-            | Irina Vilcu
-            | Leah Goldin
-            | Mariam Kamara
-            | Condoleezza Agbeko
+        - Irina Vilcu
+        - Leah Goldin
+        - Mariam Kamara
+        - Condoleezza Agbeko
     """
 
     if 'pending_social_email' not in session:
@@ -182,8 +190,16 @@ def set_up_password():
         
     return render_template('register.html', error='')
 
+
 @auth_social.route('/social/setup-social')
 def setup_social():
+    """
+    Handle setup of social login secret.
+
+    Authors:
+    - Irina Vilcu
+    - Leah Goldin
+    """
     if 'username' not in session:
         return redirect(url_for('main.index'))
 

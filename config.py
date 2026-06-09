@@ -1,3 +1,8 @@
+## Authors:
+## Jake Lockitch
+## Leah Goldin
+## Irina Vilcu
+
 import os
 from dotenv import load_dotenv
 

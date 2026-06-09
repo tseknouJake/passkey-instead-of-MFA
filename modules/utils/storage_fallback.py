@@ -34,6 +34,10 @@ class Storage:
         data = _storage.read()
         _storage.write(data)
         _storage.run(remote_operation, local_operation)
+
+    Authors:
+    - Leah Goldin
+    - Jake Lockitch
     """
 
     def __init__(self, path: str | Path, default: Any = None, label: str = "local store", supabase_client=None):
@@ -46,6 +50,10 @@ class Storage:
     def read(self) -> Any:
         """
         Local storage file read
+
+        Authors:
+        - Leah Goldin
+        - Jake Lockitch
         """
         if not self._path.exists():
             return self._make_default()
@@ -84,6 +92,10 @@ class Storage:
 
         exc_handler: optional callable(exc) -> any for services that need
         custom exception translation (e.g. APIError -> StudyStorageSetupError).
+
+        Authors:
+        - Leah Goldin
+        - Jake Lockitch
         """
         if self._use_local_store():
             return local_operation()
@@ -101,6 +113,10 @@ class Storage:
     def _use_local_store(self) -> bool:
         """
         Determine whether local storage is configured or not.
+
+        Authors:
+        - Leah Goldin
+        - Jake Lockitch
         """
         if AUTH_STORAGE_BACKEND == "file":
             return True
@@ -114,6 +130,10 @@ class Storage:
     def _log_fallback(self, reason: str) -> None:
         """
         Log fallback message to logger.
+
+        Authors:
+        - Leah Goldin
+        - Jake Lockitch
         """
         if self._fallback_logged:
             return

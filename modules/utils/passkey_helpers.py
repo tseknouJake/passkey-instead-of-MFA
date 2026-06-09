@@ -25,6 +25,9 @@ def normalize_passkey_host(hostname: str) -> str:
 
     Raises:
         ValueError: If the hostname is invalid for passkey usage.
+
+    Authors:
+    - Jake Lockitch
     """
 
     host = (hostname or "").strip().lower().strip("[]")
@@ -60,6 +63,9 @@ def get_passkey_rp_id() -> str:
 
     Returns:
         str: A valid RP ID for passkey operations.
+
+    Authors:
+    - Jake Lockitch
     """
 
     configured_rp_id = (os.environ.get("PASSKEY_RP_ID") or "").strip()

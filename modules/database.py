@@ -5,6 +5,9 @@ a Supabase client instance.
 This module centralizes database configuration so that the
 client can be reused across the application without creating
 multiple connections.
+
+Authors:
+- Leah Goldin
 """
 
 import os

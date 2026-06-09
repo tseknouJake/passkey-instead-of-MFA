@@ -3,6 +3,9 @@ Service layer for user study profiles and per-auth-method responses
 
 Supabase is the primary store. When network access to Supabase is unavailable,
 the service falls back to a local JSON file. This allows local dev to continue working.
+
+Authors:
+- Jake Lockitch
 """
 
 from __future__ import annotations

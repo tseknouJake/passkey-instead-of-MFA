@@ -38,7 +38,7 @@ def increment_failed_login():
     Counts how many times the user failed to log in.
 
     Authors:
-    | Enna Pirvu
+    - Enna Pirvu
     """
     global failed_logins
     failed_logins += 1
@@ -49,7 +49,7 @@ def start_login_timer(f):
     This starts every time a new method is chosen. Registering a passkey is not counted as a method despite it taking you to the questionare.
 
     Authors:
-    | Enna Pirvu
+    - Enna Pirvu
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -69,7 +69,7 @@ def cancel_login_timer(f):
     This happens when backing out of a login or when registering a new passkey.
 
     Authors:
-    | Enna Pirvu
+    - Enna Pirvu
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -90,7 +90,7 @@ def complete_login_timer(f):
     This runs whenever a login process is completed and the user is taken to the questionare, with the exception of registering.
 
     Authors:
-    | Enna Pirvu
+    - Enna Pirvu
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -144,6 +144,10 @@ def login_required(f):
 
     Returns:
         function: The wrapped function.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):

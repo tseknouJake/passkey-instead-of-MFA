@@ -1,3 +1,7 @@
+## Authors:
+## Jake Lockitch
+## Leah Goldin
+
 from flask import Flask
 import os
 from werkzeug.middleware.proxy_fix import ProxyFix
