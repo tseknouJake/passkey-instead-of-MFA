@@ -34,6 +34,19 @@ Dependencies installed:
 - `AuthLib` - OAuth for social login
 - `requests` - allows GET and POST
 
+## Setting up the database
+The database needs to be set up in a postgreSQL environment, specifically, a supabase project needs to be created:
+https://supabase.com
+
+To set up the database, execute the provided schema files in the 'sql' directory:
+- users.sql
+- study_schema.sql
+- login_metrics.sql
+
+After setting up the project, the required keys can be extracted from the supabase project settings:
+- Supabase project service role key
+- Supabase project URL
+
 ## Running the App
 
 For a successful experience, you need the following environment variables:
@@ -42,7 +55,7 @@ FERNET_KEY=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=
-SUPABASE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_URL=
 ```
 - If you don't have the environment variables, you can check the deployed version: https://project2-2-group10-2026.onrender.com
@@ -146,6 +159,10 @@ passkey-instead-of-MFA/
 ├── package-lock.json           # Node dependencies lockfile
 ├── README.md                   # Project documentation
 ├── requirements.txt            # Python dependencies
+├── sql/                        # Database schema
+│   ├── login_metrics.sql       # Login metrics log table
+│   ├── study_schema.sql        # User study related tables
+│   ├── users.sql               # Users table
 ├── modules/                    # Application logic
 │   ├── database.py             # Database models and connection setup
 │   ├── routes/                 # Flask blueprint route definitions
