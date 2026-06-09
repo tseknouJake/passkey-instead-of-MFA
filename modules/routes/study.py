@@ -25,6 +25,12 @@ study = Blueprint("study", __name__, url_prefix="/study")
 
 
 def _merge_form_data(profile: dict | None, response: dict | None) -> dict:
+    """
+    Merge data from the response form and user profile
+
+    Authors:
+    - Jake Lockitch
+    """
     merged = {}
     if profile:
         merged.update(profile)
@@ -34,6 +40,12 @@ def _merge_form_data(profile: dict | None, response: dict | None) -> dict:
 
 
 def _validate_study_submission(form) -> tuple[dict, dict, str | None]:
+    """
+    Validate the study submission form.
+
+    Authors:
+    - Jake Lockitch
+    """
     age_raw = (form.get("age") or "").strip()
     gender = (form.get("gender") or "").strip()
     technical_expertise_raw = (form.get("technical_expertise") or "").strip()
@@ -104,6 +116,12 @@ def _validate_study_submission(form) -> tuple[dict, dict, str | None]:
 @study.route("/", methods=["GET", "POST"])
 @login_required
 def user_study():
+    """
+    Route to the user study questionnaire
+
+    Authors:
+    - Jake Lockitch
+    """
     username = session["username"]
     auth_method = session.get("auth_method")
 

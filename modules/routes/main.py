@@ -24,7 +24,7 @@ def landing():
     Redirects authenticated users to the dashboard.
 
     Authors:
-        | Leah Goldin
+    - Leah Goldin
     """
     if is_authenticated():
         return redirect(url_for('main.dashboard'))
@@ -41,8 +41,8 @@ def index():
     Redirects authenticated users to the dashboard.
 
     Authors:
-        | Leah Goldin
-        | Jake Lockitch
+    - Leah Goldin
+    - Jake Lockitch
     """
     if is_authenticated():
         return redirect(url_for('main.dashboard'))
@@ -66,6 +66,9 @@ def dashboard():
     User dashboard.
 
     Accessible only after successful authentication.
+
+    Authors:
+    - Jake Lockitch
     """
     username = session['username']
     auth_method = session.get('auth_method')
@@ -92,11 +95,23 @@ def dashboard():
 @main.route('/questionnaire')
 @complete_login_timer
 def questionnaire():
+    """
+    Open Questionnaire page from the dashboard.
+
+    Authors:
+    - Condoleezza Agbeko
+    """
     return send_from_directory('questionnaire', 'index.html')
 
 
 @main.route('/questionnaire/<path:filename>')
 def questionnaire_static(filename):
+    """
+    Open Questionnaire page from the dashboard.
+
+    Authors:
+    - Condoleezza Agbeko
+    """
     return send_from_directory('questionnaire', filename)
 
 
@@ -104,6 +119,10 @@ def questionnaire_static(filename):
 def logout():
     """
     Log out the current user by clearing the session.
+
+    Authors:
+    - Leah Goldin
+    - Condoleezza Agbeko
     """
     session.clear()
     return redirect(url_for('main.index'))

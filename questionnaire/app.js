@@ -1,4 +1,5 @@
-// DATA
+// AUTHOR: Condoleezza Agbeko
+
 const levels = [
   {
     id: 0,
@@ -170,14 +171,12 @@ const levels = [
   }
 ];
 
-// STATE
 let currentLevel = 0;
 let currentScenario = 0;
 let sessionResults = [];
 let levelResults = {};
 let otpInterval = null;
 
-// NAVIGATION
 function show(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screenId).classList.add('active');
@@ -207,7 +206,6 @@ function nextScenario() {
   }
 }
 
-// LOAD SCENARIO
 function loadScenario() {
   if (otpInterval) clearInterval(otpInterval);
   const level = levels[currentLevel];
@@ -216,7 +214,6 @@ function loadScenario() {
   document.getElementById('bar-level').textContent = level.name;
   document.getElementById('bar-step').textContent = (currentScenario + 1) + ' / ' + level.scenarios.length;
 
-  // dots
   const dotsEl = document.getElementById('bar-dots');
   dotsEl.innerHTML = '';
   level.scenarios.forEach((_, i) => {
@@ -302,7 +299,6 @@ function handleChoice(idx, correct, sc) {
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// BRUTE FORCE ANIMATION
 async function runBfAnim() {
   const el = document.getElementById('bf-anim');
   if (!el) return;
@@ -331,17 +327,14 @@ function showLevelResults() {
   const passed = sessionResults.filter(Boolean).length;
   const total = sessionResults.length;
 
-  // Save to level scores
   levelResults[currentLevel] = { passed, total };
 
-  // Update level card indicator
   const scoreEl = document.getElementById('score-lv' + currentLevel);
   if (scoreEl) {
     const allPass = passed === total;
     scoreEl.innerHTML = `<span class="dot ${allPass ? 'dot-pass' : 'dot-fail'}"></span> ${passed}/${total} passed`;
   }
 
-  // Build results screen
   document.getElementById('final-title').textContent = level.name + ' COMPLETE';
   document.getElementById('final-sub').textContent = level.label + ' — ' + (passed === total ? 'Excellent work.' : 'Review the explanations below.');
   document.getElementById('final-score').innerHTML = `<span style="color:${passed===total?'var(--green)':'var(--yellow)'}">${passed}/${total}</span>`;

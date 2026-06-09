@@ -1,3 +1,7 @@
+// AUTHORS:
+// Condoleezza Agbeko
+// Jake Lockitch
+
 document.getElementById('credentialsSection').style.display = 'none';
 document.getElementById('registerSection').style.display = 'block';
 
@@ -21,13 +25,11 @@ async function registerPasskey() {
         const opts = await res.json();
         console.log('Registration options:', opts);
 
-        // Convert challenge from base64url to Uint8Array
         opts.challenge = Uint8Array.from(
             atob(opts.challenge.replace(/-/g, '+').replace(/_/g, '/')), 
             c => c.charCodeAt(0)
         );
 
-        // Convert user.id from base64url to Uint8Array
         opts.user.id = Uint8Array.from(
             atob(opts.user.id.replace(/-/g, '+').replace(/_/g, '/')), 
             c => c.charCodeAt(0)
@@ -37,7 +39,6 @@ async function registerPasskey() {
         const cred = await navigator.credentials.create({ publicKey: opts });
         console.log('Credential created:', cred);
 
-        // Prepare credential for server
         const credJSON = {
             id: cred.id,
             rawId: arrayBufferToBase64(cred.rawId),

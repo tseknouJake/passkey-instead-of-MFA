@@ -3,6 +3,10 @@ Service layer for handling user-related operations.
 
 This module abstracts all database interactions and ensures
 that encryption, hashing, and credential verification are handled consistently.
+
+Authors:
+- Leah Goldin (all the funtions for external database operations)
+- Jake Lockitch (local storage fallback)
 """
 
 import logging
@@ -34,6 +38,10 @@ _storage = Storage(
 def _get_local_user_record(username: str) -> dict | None:
     """
     Retrieve a local user record and attach the username field used by the app.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     user = _storage.read().get(username)
     if not isinstance(user, dict):
@@ -50,6 +58,10 @@ def get_user(username: str) -> dict | None:
 
     Returns:
         dict | None: The user object if found, otherwise None.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     def remote_operation():
         response = supabase.table("users").select("*").eq("username", username).execute()
@@ -77,7 +89,7 @@ def get_user_by_email(email: str) -> dict | None:
         dict | None: The user object if found, otherwise None.
 
     Authors:
-        | Leah Goldin
+    - Leah Goldin
     """
     response = supabase.table("users").select("*").eq("email", email).execute()
 
@@ -102,6 +114,10 @@ def create_user(username: str, password: str) -> None:
     Args:
         username (str): The username.
         password (str): The plaintext password.
+
+    Authors:
+    - Leah Goldin
+    - Jake Lockitch
     """
     password_hash = hash_password(password)
 
@@ -126,6 +142,10 @@ def create_user(username: str, password: str) -> None:
 def update_user_password(username: str, password_value: str) -> None:
     """
     Update a user's stored password value.
+
+    Authors:
+    - Leah Goldin
+    - Jake Lockitch
     """
     def remote_operation():
         supabase.table("users").update({
@@ -146,6 +166,10 @@ def update_user_password(username: str, password_value: str) -> None:
 def verify_user_password(user: dict | None, candidate_password: str | None) -> bool:
     """
     Verify a user's password and lazily migrate legacy values to hashes.
+
+    Authors:
+    - Leah Goldin
+    - Jake Lockitch
     """
     if not user or not candidate_password:
         return False
@@ -168,6 +192,10 @@ def update_mfa_secret(username: str, secret: str) -> None:
     Args:
         username (str): The username.
         secret (str): The MFA secret.
+
+    Authors:
+    - Leah Goldin
+    - Jake Lockitch
     """
     encrypted_secret = encrypt_data(secret)
 
@@ -194,6 +222,10 @@ def add_passkey_credential(username: str, credential: dict) -> None:
     Args:
         username (str): The username.
         credential (dict): The WebAuthn credential object.
+
+    Authors:
+    - Leah Goldin
+    - Jake Lockitch
     """
     user = get_user(username) or {"username": username}
 
@@ -225,7 +257,8 @@ def add_email_credential(username: str, email: str) -> None:
         email (str): The user's email address.
 
     Authors:
-        | Leah Goldin
+    - Leah Goldin
+    - Jake Lockitch
     """
 
     def remote_operation():

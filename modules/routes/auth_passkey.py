@@ -20,6 +20,12 @@ auth_passkey = Blueprint('auth_passkey', __name__)
 
 
 def login_required_passkey(f):
+    """
+    Decorator for passkey authentication.
+
+    Authors:
+    - Mariam Kamara
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'username' not in session:
@@ -42,6 +48,10 @@ def normalize_passkey_origin():
     Returns:
         Response | None: A redirect response if normalization is needed,
         otherwise None to continue processing.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
 
     if os.environ.get("PASSKEY_RP_ID"):
@@ -75,6 +85,10 @@ def normalize_passkey_origin():
 def passkey_login():
     """
     Render passkey login page.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     return render_template('passkey_login.html')
 
@@ -84,6 +98,12 @@ def passkey_login():
 def passkey_register():
     """
     Authenticate user before allowing passkey registration.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
+    - Enna Pirvu
     """
     if request.method == 'POST':
         username = request.form.get('username')
@@ -112,6 +132,11 @@ def passkey_register_options():
 
     Returns:
         JSON: Registration options including challenge, RP info, and user info.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
     """
 
     username = session['username']
@@ -160,6 +185,11 @@ def passkey_register_verify():
 
     Returns:
         JSON: सफलता response indicating successful registration.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
     """
 
     username = session['username']
@@ -186,6 +216,12 @@ def passkey_login_options():
 
     Returns:
         JSON: Authentication options including challenge and allowed credentials.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
+    - Enna Pirvu
     """
 
     data = request.json
@@ -236,6 +272,11 @@ def passkey_login_verify():
 
     Returns:
         JSON: Success response indicating authentication completion.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
     """
 
     username = session['username']

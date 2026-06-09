@@ -32,6 +32,10 @@ def encrypt_data(data: str) -> str:
 
     Returns:
         str: The encrypted data as a base64-encoded string.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     return f.encrypt(data.encode()).decode()
 
@@ -44,6 +48,10 @@ def decrypt_data(encrypted_data: str) -> str:
 
     Returns:
         str: The original decrypted plaintext.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     return f.decrypt(encrypted_data.encode()).decode()
 
@@ -51,6 +59,9 @@ def decrypt_data(encrypted_data: str) -> str:
 def maybe_decrypt_data(value: str | None) -> str | None:
     """
     Decrypt Fernet value when possible else return it unchanged.
+
+    Authors:
+    - Jake Lockitch
     """
     if not value:
         return value
@@ -66,6 +77,9 @@ def is_password_hash(value: str | None) -> bool:
     Checks if stored password is already a Werkzeug hash
     Returns:
         bool
+
+    Authors:
+    - Jake Lockitch
     """
     return isinstance(value, str) and value.startswith(("scrypt:", "pbkdf2:"))
 
@@ -73,6 +87,9 @@ def is_password_hash(value: str | None) -> bool:
 def hash_password(password: str) -> str:
     """
     Generate password hash
+
+    Authors:
+    - Jake Lockitch
     """
     return generate_password_hash(password)
 
@@ -80,6 +97,9 @@ def hash_password(password: str) -> str:
 def verify_password_value(stored_password: str | None, candidate_password: str | None) -> bool:
     """
     Verify a candidate password against hashed or legacy stored values
+
+    Authors:
+    - Jake Lockitch
     """
     if not stored_password or not candidate_password:
         return False
@@ -99,6 +119,10 @@ def get_flask_secret_key() -> str:
 
     Returns:
         str: A secret key suitable for Flask session signing.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     configured_secret = (os.environ.get("SECRET_KEY") or "").strip()
     if configured_secret:

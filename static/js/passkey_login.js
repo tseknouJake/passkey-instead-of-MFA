@@ -1,3 +1,7 @@
+// AUTHORS:
+// Condoleezza Agbeko
+// Jake Lockitch
+
 const form = document.getElementById('passkeyLoginForm');
 const messageDiv = document.getElementById('message');
 const loginBtn = document.getElementById('loginBtn');
@@ -14,7 +18,6 @@ form.addEventListener('submit', async (e) => {
 
         console.log('Requesting login options for:', username);
 
-        // Get authentication options from server
         const optionsResponse = await fetch('/api/passkey/login-options', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -32,7 +35,6 @@ form.addEventListener('submit', async (e) => {
         const options = await optionsResponse.json();
         console.log('Login options:', options);
 
-        // Convert challenge and credential IDs from base64url
         options.challenge = Uint8Array.from(
             atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), 
             c => c.charCodeAt(0)
@@ -48,11 +50,9 @@ form.addEventListener('submit', async (e) => {
 
         console.log('Requesting credential from authenticator...');
 
-        // Get credential from authenticator
         const credential = await navigator.credentials.get({ publicKey: options });
         console.log('Credential received:', credential);
 
-        // Prepare credential for server
         const credentialJSON = {
             id: credential.id,
             rawId: arrayBufferToBase64(credential.rawId),
@@ -67,7 +67,6 @@ form.addEventListener('submit', async (e) => {
 
         console.log('Verifying with server...');
 
-        // Verify with server
         const verifyResponse = await fetch('/api/passkey/login-verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -88,7 +87,6 @@ form.addEventListener('submit', async (e) => {
         console.error('Error:', error);
         let errorMsg = error.message;
 
-        // User-friendly error messages
         if (error.name === 'NotAllowedError') {
             errorMsg = 'Authentication cancelled or timed out';
         } else if (error.message.includes('No passkey registered')) {

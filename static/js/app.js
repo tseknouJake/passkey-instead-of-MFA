@@ -1,3 +1,7 @@
+// AUTHORS:
+// Condoleezza Agbeko
+// Jake Lockitch
+
 document.querySelectorAll('.auth-card').forEach(card => {
     card.addEventListener('click', function(e) {
         // Don't trigger if clicking the link directly

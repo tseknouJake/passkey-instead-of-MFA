@@ -10,6 +10,10 @@ oauth = OAuth()
 def init_oauth(app):
     """
     Initialize OAuth with the Flask app.
+
+    Authors:
+    - Irina Vilcu
+    - Leah Goldin
     """
     oauth.init_app(app)
 
@@ -24,12 +28,20 @@ def init_oauth(app):
 def get_google_oauth():
     """
     Get the OAuth instance.
+
+    Authors:
+    - Irina Vilcu
+    - Leah Goldin
     """
     return oauth
 
 def get_google_oauth_error(app):
     """
     Validate Google OAuth configuration.
+
+    Authors:
+    - Irina Vilcu
+    - Leah Goldin
     """
     client_id = app.config.get("GOOGLE_CLIENT_ID")
     client_secret = app.config.get("GOOGLE_CLIENT_SECRET")
@@ -45,6 +57,10 @@ def get_google_oauth_error(app):
 def get_google_redirect_uri(app):
     """
     Get the redirect URI for Google OAuth.
+
+    Authors:
+    - Irina Vilcu
+    - Leah Goldin
     """
     configured_uri = app.config.get("GOOGLE_REDIRECT_URI")
     if configured_uri:

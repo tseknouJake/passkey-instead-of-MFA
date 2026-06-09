@@ -7,9 +7,6 @@ Handles:
 - MFA verification
 """
 
-# TODO: use just OTP without MFA (for consistency, according to the feedback from examiners at proposal discussion)
-# can be done at a later stage - not necessary for the prototype
-
 from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, session
 import pyotp
@@ -24,6 +21,12 @@ auth_otp = Blueprint('auth_otp', __name__, url_prefix='/auth')
 
 
 def login_required_mfa(f):
+    """
+    Decorator for TOTP authentication.
+
+    Authors:
+    - Mariam Kamara
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'username' not in session:
@@ -37,6 +40,11 @@ def login_required_mfa(f):
 def mfa_login():
     """
     MFA login route.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
     """
     if request.method == 'POST':
         username = request.form.get('username')
@@ -62,6 +70,10 @@ def mfa_login():
 def setup_mfa():
     """
     Generate a TOTP secret and QR code for MFA setup.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
 
     username = session['username']
@@ -89,6 +101,12 @@ def setup_mfa():
 def verify_mfa():
     """
     Verify the TOTP code submitted by the user.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
+    - Enna Pirvu
     """
 
     username = session['username']

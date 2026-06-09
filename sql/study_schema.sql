@@ -1,3 +1,5 @@
+/* AUTHOR: Jake Lockitch */
+
 create table if not exists public.study_profiles (
     username text primary key,
     age integer not null check (age between 13 and 120),

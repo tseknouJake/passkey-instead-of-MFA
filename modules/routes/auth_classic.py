@@ -16,6 +16,11 @@ auth_classic = Blueprint('auth_classic', __name__, url_prefix='/auth')
 def validate_registration(username, password, confirm_password):
     """
     Validate registration from input
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
     """
     if not username or not password:
         return 'Username and password are required'
@@ -41,6 +46,11 @@ def create_user_session(username, auth_method='classic'):
 def register():
     """
     User registration route.
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
     """
 
     if request.method == 'POST':
@@ -66,6 +76,9 @@ def register():
 def setup_choice():
     """
     Choose authentication method after registration.
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
     """
     if 'username' not in session:
         return redirect(url_for('main.index'))
@@ -77,6 +90,12 @@ def setup_choice():
 def password_login():
     """
     Classic login route (username + password).
+
+    Authors:
+    - Jake Lockitch
+    - Leah Goldin
+    - Mariam Kamara
+    - Enna Pirvu
     """
     if request.method == 'POST':
         username = request.form.get('username')
